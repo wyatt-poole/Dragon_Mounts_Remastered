@@ -44,13 +44,13 @@ public class GenericAbilityTests {
             helper.fail("Lava immunity ability not found - cannot test conditional effects");
             return;
         }
-        
+
         Ability lavaImmunityAbility = DragonAbilityRegistry.createAbilityInstance(lavaImmunityDef);
         if (lavaImmunityAbility == null) {
             helper.fail("Failed to create lava immunity ability instance");
             return;
         }
-        
+
         lavaImmunityAbility.onInitialize(dragon);
         dragon.getAbilities().add(lavaImmunityAbility);
 
@@ -75,7 +75,7 @@ public class GenericAbilityTests {
             if (!dragon.hasEffect(MobEffects.FIRE_RESISTANCE)) {
                 helper.fail("Dragon should have fire resistance when in lava (conditional effect system failed)");
             }
-            
+
             // Test condition change - remove lava
             helper.setBlock(dragonPos, Blocks.AIR);
             helper.setBlock(dragonPos.below(), Blocks.STONE);
@@ -108,13 +108,13 @@ public class GenericAbilityTests {
             helper.fail("Tidal strength ability not found - cannot test water conditional effects");
             return;
         }
-        
+
         Ability tidalStrengthAbility = DragonAbilityRegistry.createAbilityInstance(tidalStrengthDef);
         if (tidalStrengthAbility == null) {
             helper.fail("Failed to create tidal strength ability instance");
             return;
         }
-        
+
         tidalStrengthAbility.onInitialize(dragon);
         dragon.getAbilities().add(tidalStrengthAbility);
 
@@ -154,13 +154,13 @@ public class GenericAbilityTests {
             helper.fail("Bark skin ability not found - cannot test tree proximity conditional effects");
             return;
         }
-        
+
         Ability barkSkinAbility = DragonAbilityRegistry.createAbilityInstance(barkSkinDef);
         if (barkSkinAbility == null) {
             helper.fail("Failed to create bark skin ability instance");
             return;
         }
-        
+
         barkSkinAbility.onInitialize(dragon);
         dragon.getAbilities().add(barkSkinAbility);
 
@@ -201,19 +201,19 @@ public class GenericAbilityTests {
             helper.fail("Chill touch ability not found - cannot test event trigger system");
             return;
         }
-        
+
         Ability chillTouchAbility = DragonAbilityRegistry.createAbilityInstance(chillTouchDef);
         if (chillTouchAbility == null) {
             helper.fail("Failed to create chill touch ability instance");
             return;
         }
-        
+
         chillTouchAbility.onInitialize(dragon);
         dragon.getAbilities().add(chillTouchAbility);
 
         // Spawn a zombie target
-        var zombie = helper.spawn(net.minecraft.world.entity.EntityType.ZOMBIE, 
-                                  DMRTestConstants.TEST_POS.offset(2, 0, 0));
+        var zombie =
+                helper.spawn(net.minecraft.world.entity.EntityType.ZOMBIE, DMRTestConstants.TEST_POS.offset(2, 0, 0));
 
         // Trigger the attack event directly
         dragon.triggerEventAbilities(EventType.ON_ATTACK, zombie);
@@ -222,7 +222,7 @@ public class GenericAbilityTests {
         if (!zombie.hasEffect(MobEffects.MOVEMENT_SLOWDOWN)) {
             helper.fail("Zombie should have slowness after dragon attack event (event trigger system failed)");
         }
-        
+
         helper.succeed();
     }
 
@@ -302,13 +302,13 @@ public class GenericAbilityTests {
             helper.fail("Lava immunity ability not found for tier test");
             return;
         }
-        
+
         Ability lavaImmunityAbility = DragonAbilityRegistry.createAbilityInstance(lavaImmunityDef);
         if (lavaImmunityAbility == null) {
             helper.fail("Failed to create ability instance for tier test");
             return;
         }
-        
+
         // Test with level 2
         lavaImmunityAbility.setLevel(2);
         lavaImmunityAbility.onInitialize(dragon);

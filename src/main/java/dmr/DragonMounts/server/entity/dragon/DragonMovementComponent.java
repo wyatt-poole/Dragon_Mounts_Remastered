@@ -39,7 +39,7 @@ abstract class DragonMovementComponent extends DragonInventoryComponent {
 
     @Override
     protected PathNavigation createNavigation(Level level) {
-        DragonPathNavigation dragonNavigation = new DragonPathNavigation(this, level);
+        DragonPathNavigation dragonNavigation = new DragonPathNavigation((TameableDragonEntity) this, level);
         dragonNavigation.setCanFloat(true);
         return dragonNavigation;
     }
@@ -163,7 +163,7 @@ abstract class DragonMovementComponent extends DragonInventoryComponent {
     }
 
     @Override
-    protected float getWaterSlowDown() {
+    public float getWaterSlowDown() {
         return 0.5f;
     }
 

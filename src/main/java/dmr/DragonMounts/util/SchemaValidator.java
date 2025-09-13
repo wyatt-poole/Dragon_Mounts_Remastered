@@ -106,7 +106,7 @@ public class SchemaValidator {
         for (Map.Entry<String, String> entry : schemaContents.entrySet()) {
             String uri = entry.getKey();
             String content = entry.getValue();
-            
+
             // Add mappings for relative paths that might be used in $ref
             if (uri.contains("/definitions/")) {
                 // For definition files, add mappings without the full path
@@ -124,7 +124,7 @@ public class SchemaValidator {
             if (schemaContent != null) {
                 return () -> new java.io.ByteArrayInputStream(schemaContent.getBytes());
             }
-            
+
             // Try to resolve relative references
             if (!uriString.startsWith("http")) {
                 // Try with base URI
@@ -132,20 +132,20 @@ public class SchemaValidator {
                 if (schemaContent != null) {
                     return () -> new java.io.ByteArrayInputStream(schemaContent.getBytes());
                 }
-                
+
                 // Try with schemas/ prefix
                 schemaContent = schemaContents.get(SCHEMA_BASE_URI + "schemas/" + uriString);
                 if (schemaContent != null) {
                     return () -> new java.io.ByteArrayInputStream(schemaContent.getBytes());
                 }
-                
+
                 // Try with schemas/definitions/ prefix for relative refs from definitions
                 schemaContent = schemaContents.get(SCHEMA_BASE_URI + "schemas/definitions/" + uriString);
                 if (schemaContent != null) {
                     return () -> new java.io.ByteArrayInputStream(schemaContent.getBytes());
                 }
             }
-            
+
             DMR.LOGGER.warn("Attempted to load schema from URI not in cache, blocking network access: {}", uriString);
             return null; // Return null to prevent network loading
         };
@@ -170,7 +170,8 @@ public class SchemaValidator {
 
             URI schemaUri = URI.create(SCHEMA_BASE_URI + "schemas/" + schemaFileName);
             JsonSchema schema = factory.getSchema(schemaUri);
-            String schemaName = schemaFileName.replace(".json", "").replace("types/", "").replace("definitions/", "");
+            String schemaName =
+                    schemaFileName.replace(".json", "").replace("types/", "").replace("definitions/", "");
             schemaCache.put(schemaName, schema);
         } catch (Exception e) {
             DMR.LOGGER.error("Failed to get schema from factory: {}", schemaFileName, e);

@@ -84,7 +84,63 @@ abstract class DragonAttributeComponent extends DragonSpawnComponent {
 
         setBaseValue(MAX_HEALTH, ServerConfig.BASE_HEALTH);
         setBaseValue(ATTACK_DAMAGE, ServerConfig.BASE_DAMAGE);
-        setBaseValue(MOVEMENT_SPEED, DragonConstants.BASE_SPEED_GROUND * ServerConfig.BASE_SPEED);
+        setBaseValue(
+                MOVEMENT_SPEED,
+                DragonConstants.BASE_SPEED_GROUND * ServerConfig.BASE_WALKING_SPEED * ServerConfig.BASE_SPEED);
+        setBaseValue(FLYING_SPEED, DragonConstants.BASE_SPEED_FLYING * ServerConfig.BASE_FLYING_SPEED);
+        setBaseValue(SWIM_SPEED, DragonConstants.BASE_SPEED_WATER * ServerConfig.BASE_SWIMMING_SPEED);
+
+        setRandomStats();
+    }
+
+    public void setRandomStats() {
+        {
+            var randomStatsHealth = new AttributeModifier(
+                    RANDOM_STATS_MODIFIER,
+                    upperLower(
+                            entityData.get(healthAttribute),
+                            ServerConfig.LOWER_MAX_HEALTH,
+                            ServerConfig.UPPER_MAX_HEALTH),
+                    Operation.ADD_VALUE);
+            var healthInstance = getAttribute(MAX_HEALTH);
+
+            if (!healthInstance.hasModifier(RANDOM_STATS_MODIFIER)
+                    || healthInstance.getModifier(RANDOM_STATS_MODIFIER).amount() != randomStatsHealth.amount()) {
+                if (healthInstance.hasModifier(RANDOM_STATS_MODIFIER))
+                    healthInstance.removeModifier(RANDOM_STATS_MODIFIER);
+                healthInstance.addTransientModifier(randomStatsHealth);
+            }
+        }
+
+        {
+            var randomStatsDamage = new AttributeModifier(
+                    RANDOM_STATS_MODIFIER,
+                    upperLower(entityData.get(damageAttribute), ServerConfig.LOWER_DAMAGE, ServerConfig.UPPER_DAMAGE),
+                    Operation.ADD_VALUE);
+            var damageInstance = getAttribute(ATTACK_DAMAGE);
+
+            if (!damageInstance.hasModifier(RANDOM_STATS_MODIFIER)
+                    || damageInstance.getModifier(RANDOM_STATS_MODIFIER).amount() != randomStatsDamage.amount()) {
+                if (damageInstance.hasModifier(RANDOM_STATS_MODIFIER))
+                    damageInstance.removeModifier(RANDOM_STATS_MODIFIER);
+                damageInstance.addTransientModifier(randomStatsDamage);
+            }
+        }
+
+        {
+            var randomStatsSpeed = new AttributeModifier(
+                    RANDOM_STATS_MODIFIER,
+                    upperLower(entityData.get(speedAttribute), ServerConfig.LOWER_SPEED, ServerConfig.UPPER_SPEED),
+                    Operation.ADD_VALUE);
+            var speedInstance = getAttribute(MOVEMENT_SPEED);
+
+            if (!speedInstance.hasModifier(RANDOM_STATS_MODIFIER)
+                    || speedInstance.getModifier(RANDOM_STATS_MODIFIER).amount() != randomStatsSpeed.amount()) {
+                if (speedInstance.hasModifier(RANDOM_STATS_MODIFIER))
+                    speedInstance.removeModifier(RANDOM_STATS_MODIFIER);
+                speedInstance.addTransientModifier(randomStatsSpeed);
+            }
+        }
     }
 
     public void updateAgeAttributes() {

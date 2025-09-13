@@ -169,7 +169,8 @@ public class DMRCommand {
         PacketDistributor.sendToPlayer(source.getPlayer(), new CompleteDataSync(source.getPlayer()));
         source.sendSuccess(
                 () -> Component.translatable(
-                        "dmr.commands.clear_whistle.success", Component.translatable("color." + color.getName())),
+                        "dmr.commands.clear_whistle.success",
+                        Component.translatable("color.minecraft." + color.getName())),
                 true);
         return 1;
     }
