@@ -25,10 +25,11 @@
           "type": "number",
           "description": "The chance of a dragon getting this ability",
           "minimum": 0.0,
-          "maximum": 1.0
+          "maximum": 1.0,
+          "default": 1.0
         }
       },
-      "required": ["ability", "chance"],
+      "required": ["ability"],
       "additionalProperties": false
     },
     "breath_type": {

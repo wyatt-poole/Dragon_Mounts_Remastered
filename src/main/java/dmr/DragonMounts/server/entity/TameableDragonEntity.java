@@ -75,10 +75,10 @@ public class TameableDragonEntity extends AbstractDragonEntity {
 
     @Override
     public boolean removeWhenFarAway(double distanceToClosestPlayer) {
-        return ((wasHatched() || this.tickCount > 2400 || isNaturalSpawn())
-                && !isTame()
-                && distanceToClosestPlayer > Mth.sqrt(32)
-                && !this.hasCustomName());
+        if (!isNaturalSpawn() || wasHatched() || isTame() || this.hasCustomName()) {
+            return false;
+        }
+        return (this.tickCount > 2400 && distanceToClosestPlayer > Mth.sqrt(32));
     }
 
     @Override

@@ -84,6 +84,17 @@ public class DragonBreed extends DatapackEntry implements LootTableProvider {
         return DragonBreathRegistry.getBreathType(breathType);
     }
 
+    /**
+     * Gets the breath type for this breed, with variant override support.
+     * If the variant has a breath type defined, it takes precedence over the breed's breath type.
+     */
+    public DragonBreathType getBreathType(DragonVariant variant) {
+        if (variant != null && variant.breathType() != null) {
+            return variant.breathType();
+        }
+        return getBreathType();
+    }
+
     @SerializedName("immunities")
     private List<String> immunities = new ArrayList<>();
 
@@ -130,4 +141,58 @@ public class DragonBreed extends DatapackEntry implements LootTableProvider {
 
     @SerializedName("variants")
     private List<DragonVariant> variants = new ArrayList<>();
+
+    /**
+     * Gets the model location for this breed.
+     */
+    public ResourceLocation getModelLocation() {
+        return dragonModelLocation;
+    }
+
+    /**
+     * Gets the model location for this breed, with variant override support.
+     * If the variant has a model location defined, it takes precedence over the breed's model location.
+     */
+    public ResourceLocation getModelLocation(DragonVariant variant) {
+        if (variant != null && variant.modelLocation() != null) {
+            return variant.modelLocation();
+        }
+        return getModelLocation();
+    }
+
+    /**
+     * Gets the animation location for this breed.
+     */
+    public ResourceLocation getAnimationLocation() {
+        return dragonAnimationLocation;
+    }
+
+    /**
+     * Gets the animation location for this breed, with variant override support.
+     * If the variant has an animation location defined, it takes precedence over the breed's animation location.
+     */
+    public ResourceLocation getAnimationLocation(DragonVariant variant) {
+        if (variant != null && variant.animationLocation() != null) {
+            return variant.animationLocation();
+        }
+        return getAnimationLocation();
+    }
+
+    /**
+     * Gets the inventory texture for this breed.
+     */
+    public ResourceLocation getInventoryTexture() {
+        return inventoryTexture;
+    }
+
+    /**
+     * Gets the inventory texture for this breed, with variant override support.
+     * If the variant has an inventory texture defined, it takes precedence over the breed's inventory texture.
+     */
+    public ResourceLocation getInventoryTexture(DragonVariant variant) {
+        if (variant != null && variant.inventoryTexture() != null) {
+            return variant.inventoryTexture();
+        }
+        return getInventoryTexture();
+    }
 }

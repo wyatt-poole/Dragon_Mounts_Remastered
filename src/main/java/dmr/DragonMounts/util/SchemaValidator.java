@@ -121,28 +121,62 @@ public class SchemaValidator {
         final SchemaLoader localOnlyLoader = uri -> {
             String uriString = uri.toString();
             String schemaContent = schemaContents.get(uriString);
+
             if (schemaContent != null) {
-                return () -> new java.io.ByteArrayInputStream(schemaContent.getBytes());
+                String finalSchemaContent = schemaContent;
+                return () -> new java.io.ByteArrayInputStream(finalSchemaContent.getBytes());
             }
 
-            // Try to resolve relative references
-            if (!uriString.startsWith("http")) {
-                // Try with base URI
-                schemaContent = schemaContents.get(SCHEMA_BASE_URI + uriString);
+            // Try to resolve relative references - normalize URI first
+            String normalizedUri = uriString;
+
+            // Handle relative path resolution for ../definitions/
+            if (uriString.contains("../definitions/")) {
+                // Extract the filename after ../definitions/
+                String fileName =
+                        uriString.substring(uriString.lastIndexOf("../definitions/") + "../definitions/".length());
+                // Remove any fragment (#/$defs/...) for lookup
+                if (fileName.contains("#")) {
+                    fileName = fileName.substring(0, fileName.indexOf('#'));
+                }
+                normalizedUri = SCHEMA_BASE_URI + "schemas/definitions/" + fileName;
+                schemaContent = schemaContents.get(normalizedUri);
                 if (schemaContent != null) {
-                    return () -> new java.io.ByteArrayInputStream(schemaContent.getBytes());
+                    String finalSchemaContent = schemaContent;
+                    return () -> new java.io.ByteArrayInputStream(finalSchemaContent.getBytes());
+                }
+            }
+
+            // Handle relative path resolution for ../types/
+            if (uriString.contains("../types/")) {
+                String fileName = uriString.substring(uriString.lastIndexOf("../types/") + "../types/".length());
+                if (fileName.contains("#")) {
+                    fileName = fileName.substring(0, fileName.indexOf('#'));
+                }
+                normalizedUri = SCHEMA_BASE_URI + "schemas/types/" + fileName;
+                schemaContent = schemaContents.get(normalizedUri);
+                if (schemaContent != null) {
+                    String finalSchemaContent = schemaContent;
+                    return () -> new java.io.ByteArrayInputStream(finalSchemaContent.getBytes());
+                }
+            }
+
+            // Try direct filename lookup
+            if (uriString.endsWith(".json") || uriString.contains(".json#")) {
+                String fileName = uriString;
+                if (fileName.contains("#")) {
+                    fileName = fileName.substring(0, fileName.indexOf('#'));
+                }
+                if (fileName.contains("/")) {
+                    fileName = fileName.substring(fileName.lastIndexOf('/') + 1);
                 }
 
-                // Try with schemas/ prefix
-                schemaContent = schemaContents.get(SCHEMA_BASE_URI + "schemas/" + uriString);
-                if (schemaContent != null) {
-                    return () -> new java.io.ByteArrayInputStream(schemaContent.getBytes());
-                }
-
-                // Try with schemas/definitions/ prefix for relative refs from definitions
-                schemaContent = schemaContents.get(SCHEMA_BASE_URI + "schemas/definitions/" + uriString);
-                if (schemaContent != null) {
-                    return () -> new java.io.ByteArrayInputStream(schemaContent.getBytes());
+                // Try to find this file in any of our loaded schemas
+                for (String loadedUri : schemaContents.keySet()) {
+                    if (loadedUri.endsWith("/" + fileName)) {
+                        String finalSchemaContent = schemaContents.get(loadedUri);
+                        return () -> new java.io.ByteArrayInputStream(finalSchemaContent.getBytes());
+                    }
                 }
             }
 
@@ -164,11 +198,21 @@ public class SchemaValidator {
 
     private static void getAndCacheSchema(String schemaFileName) {
         try {
-            if (!schemas.contains(schemaFileName)) {
+            // Find the full path for this schema file
+            String fullSchemaPath = null;
+            for (String schemaPath : schemas) {
+                if (schemaPath.endsWith("/" + schemaFileName)) {
+                    fullSchemaPath = schemaPath;
+                    break;
+                }
+            }
+
+            if (fullSchemaPath == null) {
+                DMR.LOGGER.warn("Schema file not found in loaded schemas: {}", schemaFileName);
                 return;
             }
 
-            URI schemaUri = URI.create(SCHEMA_BASE_URI + "schemas/" + schemaFileName);
+            URI schemaUri = URI.create(SCHEMA_BASE_URI + "schemas/" + fullSchemaPath);
             JsonSchema schema = factory.getSchema(schemaUri);
             String schemaName =
                     schemaFileName.replace(".json", "").replace("types/", "").replace("definitions/", "");

@@ -59,7 +59,7 @@
       },
       "description": "List of damage types that the dragon is immune to. Dragons with these immunities will not take damage from the specified sources.",
       "examples": [["onFire", "inFire", "lava", "hotFloor"], ["drown"]],
-      "minItems": 1
+      "minItems": 0
     },
     "attributes": {
       "$ref": "../definitions/attributes.json#/$defs/attributes",

@@ -33,6 +33,21 @@
       "description": "Texture used for this variant's dragon egg. Each variant can have a unique egg appearance.",
       "examples": ["dmr:textures/entity/dragon_egg/fire.png", "dmr:textures/entity/dragon_egg/water.png"]
     },
+    "inventory_texture": {
+      "$ref": "../definitions/resources.json#/$defs/texture",
+      "description": "Texture used for this variant when displayed in inventories and GUIs. Can override the breed's default inventory texture.",
+      "examples": ["dmr:textures/gui/dragon/fire_variant.png", "dmr:textures/gui/dragon/water_variant.png"]
+    },
+    "model_location": {
+      "$ref": "../definitions/resources.json#/$defs/resource_location",
+      "description": "Custom model file location for this variant. Can override the breed's default model to provide unique geometry.",
+      "examples": ["dmr:geo/dragon_large.geo.json", "dmr:geo/dragon_crystal.geo.json"]
+    },
+    "animation_location": {
+      "$ref": "../definitions/resources.json#/$defs/resource_location",
+      "description": "Custom animation file location for this variant. Can override the breed's default animations to provide unique behaviors.",
+      "examples": ["dmr:animations/dragon_large.animation.json", "dmr:animations/dragon_crystal.animation.json"]
+    },
     "breath_type": {
       "$ref": "../definitions/abilities.json#/$defs/breath_type",
       "description": "The type of breath attack that this variant uses. Can override the breed's default breath type.",

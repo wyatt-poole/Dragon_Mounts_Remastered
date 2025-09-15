@@ -6,6 +6,7 @@ import dmr.DragonMounts.registry.ModComponents;
 import dmr.DragonMounts.registry.datapack.DragonBreedsRegistry;
 import dmr.DragonMounts.registry.entity.ModEntities;
 import dmr.DragonMounts.registry.item.ModItems;
+import dmr.DragonMounts.server.entity.TameableDragonEntity;
 import dmr.DragonMounts.types.dragonBreeds.DragonBreed;
 import dmr.DragonMounts.types.dragonBreeds.DragonVariant;
 import java.util.Optional;

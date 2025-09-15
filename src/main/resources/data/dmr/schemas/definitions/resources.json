@@ -69,8 +69,8 @@
     "color": {
       "$anchor": "color",
       "type": "string", 
-      "pattern": "^#[0-9a-fA-F]{6}$",
-      "description": "A hexadecimal color value"
+      "pattern": "^#?[0-9a-fA-F]{3,6}$",
+      "description": "A hexadecimal color value (with or without # prefix, 3-6 characters)"
     },
     "block_tag": {
       "$anchor": "block_tag",
@@ -103,7 +103,7 @@
       "items": {
         "type": "object",
         "properties": {
-          "loot_table": {
+          "table": {
             "$ref": "#loot_table", 
             "description": "The loot table identifier"
           },
@@ -114,20 +114,20 @@
             "maximum": 1.0,
             "default": 1.0
           },
-          "min_quantity": {
+          "min": {
             "type": "integer",
             "description": "Minimum quantity to generate",
             "minimum": 1, 
             "default": 1
           },
-          "max_quantity": {
+          "max": {
             "type": "integer",
             "description": "Maximum quantity to generate", 
             "minimum": 1,
             "default": 1
           }
         },
-        "required": ["loot_table"],
+        "required": ["table"],
         "additionalProperties": false
       },
       "minItems": 1

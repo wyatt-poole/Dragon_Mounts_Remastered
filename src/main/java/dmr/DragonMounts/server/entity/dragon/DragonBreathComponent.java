@@ -65,7 +65,7 @@ abstract class DragonBreathComponent extends DragonAnimationComponent {
             var breathSource = new Vec3(breathSourcePosition.x, breathSourcePosition.y, breathSourcePosition.z)
                     .add(diff.scale(0.5f));
 
-            var breathType = getDragon().getBreed().getBreathType();
+            var breathType = getDragon().getBreed().getBreathType(getDragon().getVariant());
             if (breathType == null) return;
             var particleDensity = breathType.getParticleDensity();
 
@@ -199,7 +199,7 @@ abstract class DragonBreathComponent extends DragonAnimationComponent {
      * Checks if the dragon has a breath attack.
      */
     public boolean hasBreathAttack() {
-        return getDragon().getBreed().getBreathType() != null;
+        return getDragon().getBreed().getBreathType(getDragon().getVariant()) != null;
     }
 
     public boolean hasBreathTarget() {
@@ -225,7 +225,7 @@ abstract class DragonBreathComponent extends DragonAnimationComponent {
         if (!canHarmWithBreath(target)) return;
         if (getControllingPassenger() != null && getControllingPassenger() == target) return;
 
-        var breathType = getDragon().getBreed().getBreathType();
+        var breathType = getDragon().getBreed().getBreathType(getDragon().getVariant());
         if (breathType == null) return;
 
         // Get the base damage from the breath type

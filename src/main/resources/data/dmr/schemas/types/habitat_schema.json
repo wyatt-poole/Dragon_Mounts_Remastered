@@ -86,14 +86,14 @@
           "const": "world_height",
           "description": "Specifies that this habitat is based on the Y-coordinate (height) in the world."
         },
-        "min_height": {
+        "height": {
           "type": "integer",
           "description": "Minimum Y-coordinate where this habitat is suitable. Dragons below this height receive no habitat points.",
           "examples": [0, 64, 128]
         },
-        "above_sea_level": {
+        "below": {
           "type": "boolean",
-          "description": "Whether the habitat requires the dragon to be above sea level (Y=64). Takes precedence over min_height if both are specified.",
+          "description": "Whether to check if height is below the specified value (true) or above it (false).",
           "default": false
         },
         "points": {
@@ -115,16 +115,16 @@
           "const": "light",
           "description": "Specifies that this habitat is based on the light level at the dragon's location."
         },
-        "min_light": {
+        "light": {
           "type": "integer",
-          "description": "Minimum light level required for this habitat. Light levels range from 0 (complete darkness) to 15 (bright sunlight).",
+          "description": "Light level threshold for this habitat. Light levels range from 0 (complete darkness) to 15 (bright sunlight).",
           "minimum": 0,
           "maximum": 15,
           "examples": [0, 7, 15]
         },
-        "requires_sunlight": {
+        "below": {
           "type": "boolean",
-          "description": "Whether the habitat specifically requires natural sunlight (not artificial light sources like torches).",
+          "description": "Whether to check if light level is below the threshold (true) or above it (false).",
           "default": false
         },
         "points": {
