@@ -4,6 +4,7 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.brigadier.CommandDispatcher;
+import dmr.DragonMounts.common.handlers.DragonWhistleHandler;
 import dmr.DragonMounts.config.ClientConfig;
 import dmr.DragonMounts.config.ServerConfig;
 import dmr.DragonMounts.network.packets.PacketRegistry;
@@ -93,6 +94,7 @@ public class DMR {
         ModAttributes.ATTRIBUTES.register(bus);
 
         bus.addListener(PacketRegistry::registerEvent);
+        bus.addListener(DragonWhistleHandler::registerTicketController);
 
         NeoForge.EVENT_BUS.addListener(this::registerCommands);
     }

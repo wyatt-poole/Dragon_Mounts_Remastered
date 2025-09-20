@@ -52,26 +52,6 @@ public class DragonWhistleEvent {
     @SubscribeEvent
     public static void onEntityJoinWorld(EntityJoinLevelEvent event) {
         if (!event.getLevel().isClientSide) {
-            if (event.getEntity() instanceof TameableDragonEntity dragon) {
-                if (dragon.getOwner() != null && dragon.getOwner() instanceof Player player) {
-                    var cap = player.getData(ModCapabilities.PLAYER_CAPABILITY);
-                    var index = DragonWhistleHandler.getDragonSummonIndex(player, dragon.getDragonUUID());
-
-                    if (cap.lastSummons != null && !cap.lastSummons.isEmpty()) {
-                        if (cap.lastSummons.containsKey(index)
-                                && !cap.lastSummons.get(index).equals(dragon.getUUID())) {
-                            DMR.LOGGER.debug(
-                                    "Preventing loading of dragon in {}, last entity id mismatch. Expected: {}, got: {}",
-                                    event.getLevel().dimension().location(),
-                                    cap.lastSummons.get(index),
-                                    dragon.getDragonUUID());
-                            event.setCanceled(true);
-                            return;
-                        }
-                    }
-                }
-            }
-
             // Check if player is online and has a dragon instance
             if (event.getEntity() instanceof Player player) {
                 var state = player.getData(ModCapabilities.PLAYER_CAPABILITY);

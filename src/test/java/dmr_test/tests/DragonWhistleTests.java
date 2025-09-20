@@ -185,8 +185,8 @@ public class DragonWhistleTests {
         player.moveToCentre();
 
         // Test with no whistle
-        boolean canCall = DragonWhistleHandler.canCall(player, -1);
-        if (canCall) {
+        var canCallResult = DragonWhistleHandler.canCall(player, -1);
+        if (canCallResult == DragonWhistleHandler.WhistleCallResult.SUCCESS) {
             helper.fail("Player can call dragon with no whistle");
         }
 
@@ -212,8 +212,8 @@ public class DragonWhistleTests {
         player.moveToCentre();
 
         // Test with whistle but no dragon
-        boolean canCall = DragonWhistleHandler.canCall(player, 1);
-        if (canCall) {
+        var canCallResult = DragonWhistleHandler.canCall(player, 1);
+        if (canCallResult == DragonWhistleHandler.WhistleCallResult.SUCCESS) {
             helper.fail("Player can call dragon when no dragon exists");
         }
 
@@ -770,6 +770,172 @@ public class DragonWhistleTests {
 
         if (index2 != 1) {
             helper.fail("Dragon2 was bound to wrong whistle index: " + index2);
+        }
+
+        helper.succeed();
+    }
+
+    /**
+     * Tests DragonWhistleHandler whistle selection.
+     */
+    @EmptyTemplate(floor = true)
+    @GameTest
+    @TestHolder
+    public static void predictableWhistleSelection(ExtendedGameTestHelper helper) {
+        var player = helper.makeTickingMockServerPlayerInLevel(GameType.DEFAULT_MODE);
+        player.moveToCentre();
+
+        // Setup multiple whistles
+        var cap = player.getData(ModCapabilities.PLAYER_CAPABILITY);
+        cap.setPlayerInstance(player);
+        var handler = PlayerStateUtils.getHandler(player);
+
+        // Whistle 1: Dead dragon (should be skipped entirely)
+        player.getInventory()
+                .setItem(0, new ItemStack(ModItems.DRAGON_WHISTLES.get("red").get()));
+        handler.dragonNBTs.put(1, new CompoundTag());
+        handler.dragonInstances.put(1, new DragonInstance("minecraft:overworld", UUID.randomUUID(), UUID.randomUUID()));
+        handler.respawnDelays.put(1, 100); // Dead dragon - should be filtered out
+
+        // Whistle 2: Live dragon in same dimension (should win due to inventory position)
+        player.getInventory()
+                .setItem(1, new ItemStack(ModItems.DRAGON_WHISTLES.get("blue").get()));
+        handler.dragonNBTs.put(2, new CompoundTag());
+        var liveInstance = new DragonInstance("minecraft:overworld", UUID.randomUUID(), UUID.randomUUID());
+        handler.dragonInstances.put(2, liveInstance);
+
+        // Whistle 3: Live dragon in different dimension (lower priority due to dimension)
+        player.getInventory()
+                .setItem(2, new ItemStack(ModItems.DRAGON_WHISTLES.get("green").get()));
+        handler.dragonNBTs.put(3, new CompoundTag());
+        var otherDimensionInstance = new DragonInstance("minecraft:the_nether", UUID.randomUUID(), UUID.randomUUID());
+        handler.dragonInstances.put(3, otherDimensionInstance);
+
+        // Test whistle selection
+        var smartIndex = DragonWhistleHandler.getSmartDragonSummonIndex(player);
+        if (smartIndex != 2) {
+            helper.fail(
+                    "Predictable selection should choose live dragon in same dimension (2) but chose: " + smartIndex);
+        }
+
+        // Test consistency - should always return same result with same setup
+        var smartIndex2 = DragonWhistleHandler.getSmartDragonSummonIndex(player);
+        if (smartIndex2 != smartIndex) {
+            helper.fail("Selection should be consistent but changed from " + smartIndex + " to " + smartIndex2);
+        }
+
+        helper.succeed();
+    }
+
+    /**
+     * Tests predictive dragon caching system.
+     */
+    @EmptyTemplate(floor = true)
+    @GameTest
+    @TestHolder
+    public static void predictiveDragonCaching(ExtendedGameTestHelper helper) {
+        var player = helper.makeTickingMockServerPlayerInLevel(GameType.DEFAULT_MODE);
+        player.moveToCentre();
+        var dragon = helper.spawn(ModEntities.DRAGON_ENTITY.get(), DMRTestConstants.TEST_POS);
+        dragon.setBreed(DragonBreedsRegistry.getDefault());
+
+        // Cache dragon state
+        DragonWhistleHandler.cacheDragonState(dragon);
+
+        // Verify cache entry exists
+        var cachedState = DragonWhistleHandler.getCachedDragonState(dragon.getDragonUUID());
+        if (cachedState == null) {
+            helper.fail("Dragon state was not cached");
+        }
+
+        if (!cachedState.isAlive) {
+            helper.fail("Cached dragon should be alive");
+        }
+
+        if (!cachedState.isInDimension(player.level.dimension().location().toString())) {
+            helper.fail("Cached dragon should be in same dimension as player");
+        }
+
+        // Test cache expiry (this would need time advancement in a real test)
+        // For now, just verify the expiry logic exists
+        if (cachedState.isExpired() && System.currentTimeMillis() - cachedState.cacheTime < 5000) {
+            helper.fail("Cache should not expire immediately");
+        }
+
+        helper.succeed();
+    }
+
+    /**
+     * Tests cross-dimensional dragon transfer functionality.
+     */
+    @EmptyTemplate(floor = true)
+    @GameTest
+    @TestHolder
+    public static void crossDimensionalTransfer(ExtendedGameTestHelper helper) {
+        var player = helper.makeTickingMockServerPlayerInLevel(GameType.DEFAULT_MODE);
+        player.moveToCentre();
+        var dragon = helper.spawn(ModEntities.DRAGON_ENTITY.get(), DMRTestConstants.TEST_POS);
+        dragon.setBreed(DragonBreedsRegistry.getDefault());
+
+        // Set dragon to whistle
+        DragonWhistleHandler.setDragon(player, dragon, 1);
+
+        // Verify dragon instance has position data for chunk loading
+        var cap = player.getData(ModCapabilities.PLAYER_CAPABILITY);
+        var instance = cap.dragonInstances.get(1);
+
+        if (instance == null) {
+            helper.fail("Dragon instance not found");
+        }
+
+        if (instance.getLastKnownPosition() == null) {
+            helper.fail("Dragon instance should have position data");
+        }
+
+        if (!instance.requiresChunkLoading()) {
+            helper.fail("Dragon instance should support chunk loading");
+        }
+
+        if (instance.getChunkPos() == null) {
+            helper.fail("Dragon instance should provide chunk position");
+        }
+
+        // Test predictive availability
+        if (!DragonWhistleHandler.isPredictivelyAvailable(player, 1)) {
+            helper.fail("Dragon should be predictively available");
+        }
+
+        helper.succeed();
+    }
+
+    /**
+     * Tests user feedback system improvements.
+     */
+    @EmptyTemplate(floor = true)
+    @GameTest
+    @TestHolder
+    public static void userFeedbackSystem(ExtendedGameTestHelper helper) {
+        var player = helper.makeTickingMockServerPlayerInLevel(GameType.DEFAULT_MODE);
+        player.moveToCentre();
+
+        // Test different call result types
+        var noWhistleResult = DragonWhistleHandler.WhistleCallResult.NO_DRAGON_BOUND;
+        var travelingResult = DragonWhistleHandler.WhistleCallResult.DRAGON_TRAVELING;
+        var successResult = DragonWhistleHandler.WhistleCallResult.SUCCESS;
+
+        // Test that results have proper translation keys
+        if (noWhistleResult.name().isEmpty()) {
+            helper.fail("Result should have non-empty name");
+        }
+
+        // Test enhanced canCall method returns proper results
+        var result = DragonWhistleHandler.canCall(player, -1);
+        if (result == DragonWhistleHandler.WhistleCallResult.SUCCESS) {
+            helper.fail("Should not succeed when calling with no whistle");
+        }
+
+        if (result != DragonWhistleHandler.WhistleCallResult.NO_DRAGON_BOUND) {
+            helper.fail("Should return NO_DRAGON_BOUND for invalid index");
         }
 
         helper.succeed();

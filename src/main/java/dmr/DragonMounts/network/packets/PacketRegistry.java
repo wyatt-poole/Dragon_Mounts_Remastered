@@ -42,6 +42,13 @@ public class PacketRegistry {
         PacketHelper.registerPacket(registrar, new DragonAgeSyncPacket());
         PacketHelper.registerPacket(registrar, new DragonRespawnDelayPacket());
         PacketHelper.registerPacket(registrar, new DragonNBTSync());
+        PacketHelper.registerPacket(registrar, new DragonHeartbeatPacket());
+
+        // New efficient dragon sync packets
+        PacketHelper.registerPacket(registrar, new DragonPublicValidationPacket());
+        PacketHelper.registerPacket(registrar, new DragonPublicStatePacket());
+        PacketHelper.registerPacket(registrar, new RequestDragonStatePacket());
+        PacketHelper.registerPacket(registrar, new DragonOwnerUpdatePacket());
 
         // Dragon action packets
         PacketHelper.registerPacket(registrar, new DragonAttackPacket());

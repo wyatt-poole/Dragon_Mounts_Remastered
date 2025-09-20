@@ -197,12 +197,10 @@ public class DragonOwnerCapability implements INBTSerializable<CompoundTag> {
             // Legacy support for dragonUUID, remove in future versions
             if (base.contains("dragonUUID_" + color.getId())) {
                 var id = base.getUUID("dragonUUID_" + color.getId());
-                var instance = new DragonInstance(
-                        getPlayerInstance() != null
-                                ? getPlayerInstance().level.dimension().toString()
-                                : "minecraft:overworld",
-                        UUID.randomUUID(),
-                        id);
+                String dimension = getPlayerInstance() != null
+                        ? getPlayerInstance().level.dimension().location().toString()
+                        : "minecraft:overworld";
+                var instance = new DragonInstance(dimension, UUID.randomUUID(), id);
                 dragonInstances.put(color.getId(), instance);
             }
         }

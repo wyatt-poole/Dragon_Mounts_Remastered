@@ -48,6 +48,7 @@
   "dmr.dragon_call.unlink_success": "Successfully unbound from your dragon!",
   "dmr.dragon_call.link_success": "Successfully bound to %1$s!",
   "dmr.dragon_call.no_whistle": "You need a whistle to call your dragon!",
+  "dmr.dragon_call.traveling": "Your dragon is on its way...",
   "dmr.dragon_summon.tooltip.1": "Bound to %1$s",
   "dmr.dragon_summon.tooltip.2": "Dead, Can be called back in %1$s seconds",
   "dmr.commands.dragon_spawn.invalid_breed": "Invalid breed: %1$s",
