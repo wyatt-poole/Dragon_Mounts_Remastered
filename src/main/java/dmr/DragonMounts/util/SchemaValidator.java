@@ -236,7 +236,8 @@ public class SchemaValidator {
             if (!errors.isEmpty()) {
                 DMR.LOGGER.error("Schema validation failed for {} with schema {}", fileIdentifier, schemaName);
                 errors.forEach(error -> DMR.LOGGER.error("  - {}", error.getMessage()));
-                return false;
+                //                return false; //TODO Disable for now so it only logs error rather than preventing
+                // loading
             }
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException("Failed to parse JSON string", e);

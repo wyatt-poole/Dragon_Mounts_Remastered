@@ -302,7 +302,7 @@ abstract class DragonAbilitiesComponent extends DragonTierComponent {
                 String type = abilityTag.getString("type");
 
                 // Get ability definition from registry
-                DragonAbility definition = DragonAbilityRegistry.getAbilityDefinition(ResourceLocation.tryParse(type));
+                DragonAbility definition = DragonAbilityRegistry.getAbilityDefinition(DMR.id(type));
                 if (definition != null) {
                     Ability ability = DragonAbilityRegistry.createAbilityInstance(definition);
                     if (ability != null) {

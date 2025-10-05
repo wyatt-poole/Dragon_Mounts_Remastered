@@ -45,6 +45,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.fml.ModList;
 import org.joml.Vector3f;
 
 public class DMREggBlock extends DragonEggBlock implements EntityBlock, SimpleWaterloggedBlock {
@@ -128,11 +129,15 @@ public class DMREggBlock extends DragonEggBlock implements EntityBlock, SimpleWa
     @OnlyIn(Dist.CLIENT)
     @Override
     public RenderShape getRenderShape(BlockState pState) {
-        return (pState.getValue(HATCHING)
-                        && ClientConfig.MOD_CONFIG_SPEC.isLoaded()
-                        && ClientConfig.RENDER_HATCHING_EGG)
-                ? RenderShape.INVISIBLE
-                : RenderShape.MODEL;
+        return (pState.getValue(HATCHING) && hatchingRenderEnabled()) ? RenderShape.INVISIBLE : RenderShape.MODEL;
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static boolean hatchingRenderEnabled() {
+        if (ModList.get().isLoaded("continuity"))
+            return false; // Hacky way to disable hatching rendering when Continuity is loaded, since it overrides base
+        // game model classes
+        return ClientConfig.MOD_CONFIG_SPEC.isLoaded() && ClientConfig.RENDER_HATCHING_EGG;
     }
 
     @Override

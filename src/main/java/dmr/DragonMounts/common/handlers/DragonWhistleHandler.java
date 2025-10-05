@@ -6,7 +6,6 @@ import dmr.DragonMounts.common.capability.DragonOwnerCapability;
 import dmr.DragonMounts.common.capability.types.NBTInterface;
 import dmr.DragonMounts.config.ServerConfig;
 import dmr.DragonMounts.network.packets.CompleteDataSync;
-import dmr.DragonMounts.network.packets.DragonOwnerUpdatePacket;
 import dmr.DragonMounts.network.packets.DragonStatePacket;
 import dmr.DragonMounts.registry.ModSounds;
 import dmr.DragonMounts.registry.entity.ModCapabilities;
@@ -437,24 +436,7 @@ public class DragonWhistleHandler {
                 handler.dragonInstances.remove(index);
                 handler.respawnDelays.remove(index);
 
-                // Use targeted cleanup operation instead of CompleteDataSync (90% bandwidth reduction)
-                try {
-                    CompoundTag cleanupData = new CompoundTag();
-                    cleanupData.putBoolean("cleanup", true);
-                    cleanupData.putString("reason", "data_corruption");
-                    DragonSyncManager.updateOwnerData(
-                            (ServerPlayer) player,
-                            index,
-                            DragonOwnerUpdatePacket.UpdateType.LINK_OPERATION,
-                            cleanupData);
-                } catch (Exception e) {
-                    // Fallback to CompleteDataSync for critical data corruption cleanup
-                    DMR.LOGGER.warn(
-                            "Targeted cleanup sync failed for player {}, falling back to CompleteDataSync",
-                            player.getName().getString(),
-                            e);
-                    PacketDistributor.sendToPlayer((ServerPlayer) player, new CompleteDataSync(player));
-                }
+                PacketDistributor.sendToPlayer((ServerPlayer) player, new CompleteDataSync(player));
 
                 DMR.LOGGER.debug(
                         "Cleaned up corrupted dragon data for player {} index {}",

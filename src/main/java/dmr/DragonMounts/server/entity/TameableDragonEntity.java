@@ -3,11 +3,9 @@ package dmr.DragonMounts.server.entity;
 import com.mojang.serialization.Dynamic;
 import dmr.DragonMounts.DMR;
 import dmr.DragonMounts.ModConstants;
-import dmr.DragonMounts.common.handlers.DragonSyncManager;
 import dmr.DragonMounts.common.handlers.DragonWhistleHandler;
 import dmr.DragonMounts.common.handlers.DragonWhistleHandler.DragonInstance;
 import dmr.DragonMounts.config.ServerConfig;
-import dmr.DragonMounts.network.packets.DragonHeartbeatPacket;
 import dmr.DragonMounts.registry.ModCriterionTriggers;
 import dmr.DragonMounts.server.ai.DragonAI;
 import dmr.DragonMounts.server.entity.dragon.AbstractDragonEntity;
@@ -39,7 +37,6 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.portal.DimensionTransition;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.NeoForgeMod;
-import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 
 @Getter
@@ -63,21 +60,6 @@ public class TameableDragonEntity extends AbstractDragonEntity {
         this.level().getProfiler().push("dragonActivityUpdate");
         DragonAI.selectMostAppropriateActivity(this);
         this.level().getProfiler().pop();
-
-        // Dragon heartbeat system - update cache and sync with owner every 5 seconds (100 ticks)
-        if (this.tickCount % 100 == 0 && isTame() && getDragonUUID() != null) {
-            this.level().getProfiler().push("dragonHeartbeat");
-            sendHeartbeat();
-            this.level().getProfiler().pop();
-        }
-
-        // New validation heartbeat - lightweight checksum to all tracking players
-        // Less frequent than owner heartbeat to balance network efficiency
-        if (this.tickCount % 900 == 0 && getDragonUUID() != null) { // Every 45 seconds (900 ticks)
-            this.level().getProfiler().push("dragonValidation");
-            sendValidationHeartbeat();
-            this.level().getProfiler().pop();
-        }
 
         super.customServerAiStep();
     }
@@ -295,55 +277,5 @@ public class TameableDragonEntity extends AbstractDragonEntity {
                 && this.isFree(nextDeltaVector.x, nextDeltaVector.y + 0.6D - this.getY() + y0, nextDeltaVector.z)) {
             this.setDeltaMovement(nextDeltaVector.x, 0.3D, nextDeltaVector.z);
         }
-    }
-
-    /**
-     * Sends a heartbeat to update the dragon cache and sync status with owner
-     * This allows the whistle system to have current dragon status without
-     * constantly searching for dragons across dimensions
-     */
-    private void sendHeartbeat() {
-        // Update the dragon cache with current state
-        DragonWhistleHandler.cacheDragonState(this);
-
-        // Update owner's dragon instance data if they're online
-        if (getOwner() instanceof ServerPlayer owner) {
-            var ownerState = PlayerStateUtils.getHandler(owner);
-            var dragonIndex = DragonWhistleHandler.getDragonSummonIndex(owner, getDragonUUID());
-
-            if (dragonIndex != -1 && ownerState.dragonInstances.containsKey(dragonIndex)) {
-                var instance = ownerState.dragonInstances.get(dragonIndex);
-                if (instance != null) {
-                    // Update the instance with current dragon data
-                    instance.updateFromDragon(this);
-
-                    // Send heartbeat packet to owner for real-time status updates
-                    var heartbeatPacket = new DragonHeartbeatPacket(
-                            dragonIndex,
-                            this.level().dimension().location().toString(),
-                            this.blockPosition(),
-                            this.isAlive(),
-                            this.getHealth(),
-                            this.getMaxHealth(),
-                            this.isOrderedToSit(),
-                            System.currentTimeMillis());
-
-                    PacketDistributor.sendToPlayer(owner, heartbeatPacket);
-
-                    DMR.LOGGER.debug(
-                            "Dragon {} sent heartbeat to owner {} (index {})",
-                            getDragonUUID(),
-                            owner.getName().getString(),
-                            dragonIndex);
-                }
-            }
-        }
-    }
-
-    /**
-     * Sends validation heartbeat to all tracking players for efficient public state sync
-     */
-    private void sendValidationHeartbeat() {
-        DragonSyncManager.sendValidationHeartbeat(this);
     }
 }

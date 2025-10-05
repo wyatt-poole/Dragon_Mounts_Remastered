@@ -132,8 +132,7 @@ public class DragonWhistleEvent {
 
                 // Player is online, do death handle
                 if (dragon.getOwner() != null && dragon.getOwner() instanceof Player player) {
-                    // Death message already gets sent by vanilla, so until I can figure out how to
-                    // cancel
+                    // Death message already gets sent by vanilla, so until I can figure out how to cancel
                     // that, just let vanilla send the message when player is online
                     player.displayClientMessage(mes, false);
 

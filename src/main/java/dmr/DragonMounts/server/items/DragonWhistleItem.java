@@ -3,10 +3,8 @@ package dmr.DragonMounts.server.items;
 import dmr.DragonMounts.client.gui.CommandMenu.CommandMenuScreen;
 import dmr.DragonMounts.client.handlers.CommandOverlayHandler;
 import dmr.DragonMounts.common.capability.DragonOwnerCapability;
-import dmr.DragonMounts.common.handlers.DragonSyncManager;
 import dmr.DragonMounts.common.handlers.DragonWhistleHandler;
 import dmr.DragonMounts.network.packets.CompleteDataSync;
-import dmr.DragonMounts.network.packets.DragonOwnerUpdatePacket;
 import dmr.DragonMounts.registry.datapack.DragonBreedsRegistry;
 import dmr.DragonMounts.registry.entity.ModCapabilities;
 import dmr.DragonMounts.registry.item.ModItems;
@@ -177,57 +175,26 @@ public class DragonWhistleItem extends Item {
                         cap.dragonNBTs.remove(color.getId());
                         cap.respawnDelays.remove(color.getId());
                         pPlayer.displayClientMessage(Component.translatable("dmr.dragon_call.unlink_success"), true);
-
-                        // Use targeted unlink operation instead of CompleteDataSync (90% bandwidth reduction)
-                        try {
-                            CompoundTag unlinkData = new CompoundTag();
-                            unlinkData.putBoolean("unlink", true);
-                            DragonSyncManager.updateOwnerData(
-                                    (ServerPlayer) pPlayer,
-                                    color.getId(),
-                                    DragonOwnerUpdatePacket.UpdateType.LINK_OPERATION,
-                                    unlinkData);
-                        } catch (Exception e) {
-                            // Fallback to CompleteDataSync if targeted sync fails
-                            DMR.LOGGER.warn(
-                                    "Targeted unlink sync failed for player {}, falling back to CompleteDataSync",
-                                    pPlayer.getName().getString(),
-                                    e);
-                            PacketDistributor.sendToPlayer((ServerPlayer) pPlayer, new CompleteDataSync(pPlayer));
-                        }
+                        PacketDistributor.sendToPlayer((ServerPlayer) pPlayer, new CompleteDataSync(pPlayer));
                     }
                     return InteractionResult.SUCCESS;
                 } else {
                     DragonWhistleHandler.setDragon(pPlayer, dragon, color.getId());
 
-                    // Use targeted link operation instead of CompleteDataSync (90% bandwidth reduction)
-                    try {
-                        // Get the newly created NBT and instance data
-                        var handler = PlayerStateUtils.getHandler(pPlayer);
-                        CompoundTag linkData = new CompoundTag();
+                    // Get the newly created NBT and instance data
+                    var handler = PlayerStateUtils.getHandler(pPlayer);
+                    CompoundTag linkData = new CompoundTag();
 
-                        // Include the dragon's NBT data for the link
-                        if (handler.dragonNBTs.containsKey(color.getId())) {
-                            linkData.put("nbt", handler.dragonNBTs.get(color.getId()));
-                        }
-
-                        // Include basic dragon info
-                        linkData.putString("dragonName", dragon.getDisplayName().getString());
-                        linkData.putString("dragonUUID", dragon.getDragonUUID().toString());
-
-                        DragonSyncManager.updateOwnerData(
-                                (ServerPlayer) pPlayer,
-                                color.getId(),
-                                DragonOwnerUpdatePacket.UpdateType.LINK_OPERATION,
-                                linkData);
-                    } catch (Exception e) {
-                        // Fallback to CompleteDataSync if targeted sync fails
-                        DMR.LOGGER.warn(
-                                "Targeted link sync failed for player {}, falling back to CompleteDataSync",
-                                pPlayer.getName().getString(),
-                                e);
-                        PacketDistributor.sendToPlayer((ServerPlayer) pPlayer, new CompleteDataSync(pPlayer));
+                    // Include the dragon's NBT data for the link
+                    if (handler.dragonNBTs.containsKey(color.getId())) {
+                        linkData.put("nbt", handler.dragonNBTs.get(color.getId()));
                     }
+
+                    // Include basic dragon info
+                    linkData.putString("dragonName", dragon.getDisplayName().getString());
+                    linkData.putString("dragonUUID", dragon.getDragonUUID().toString());
+
+                    PacketDistributor.sendToPlayer((ServerPlayer) pPlayer, new CompleteDataSync(pPlayer));
 
                     pPlayer.displayClientMessage(
                             Component.translatable(
