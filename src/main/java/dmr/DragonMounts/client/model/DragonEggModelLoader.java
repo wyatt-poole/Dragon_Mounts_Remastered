@@ -29,8 +29,8 @@ public class DragonEggModelLoader implements IGeometryLoader<DragonEggModel> {
             var rl = entry.getKey();
             var path = rl.getPath();
             path = path.substring(length, path.length() - suffixLength);
-            var id = String.format(
-                    "%s", path.substring("block/dragon_eggs/".length(), path.length() - "_dragon_egg".length()));
+            // Extract ID from path - supports both "breed_dragon_egg" and "breed$variant_dragon_egg" formats
+            var id = path.substring("block/dragon_eggs/".length(), path.length() - "_dragon_egg".length());
 
             try (var reader = entry.getValue().openAsReader()) {
                 models.put(id, BlockModel.fromStream(reader));
