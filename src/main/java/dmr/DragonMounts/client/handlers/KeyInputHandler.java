@@ -7,6 +7,7 @@ import dmr.DragonMounts.client.gui.CommandMenu.CommandMenuScreen;
 import dmr.DragonMounts.common.handlers.DragonWhistleHandler;
 import dmr.DragonMounts.config.ClientConfig;
 import dmr.DragonMounts.network.packets.DismountDragonPacket;
+import dmr.DragonMounts.network.packets.DragonBreathPacket;
 import dmr.DragonMounts.network.packets.SummonDragonPacket;
 import dmr.DragonMounts.server.entity.TameableDragonEntity;
 import dmr.DragonMounts.util.PlayerStateUtils;
@@ -50,6 +51,10 @@ public class KeyInputHandler {
 
     public static KeyMapping DESCEND_KEY = new KeyMapping(
             "dmr.keybind.descend", KeyConflictContext.IN_GAME, InputConstants.UNKNOWN, "dmr.keybind.category");
+
+    public static KeyMapping BREATH_KEY = new KeyMapping(
+            "dmr.keybind.breath", KeyConflictContext.IN_GAME, Type.KEYSYM, GLFW.GLFW_KEY_B, "dmr.keybind.category");
+
     private static boolean lastWheelState = false;
 
     @SubscribeEvent
@@ -59,6 +64,7 @@ public class KeyInputHandler {
         event.register(DRAGON_COMMAND_KEY);
         event.register(DISMOUNT_KEY);
         event.register(DESCEND_KEY);
+        event.register(BREATH_KEY);
     }
 
     public static void onKeyboardTick() {
@@ -129,7 +135,11 @@ public class KeyInputHandler {
 
             var player = Minecraft.getInstance().player;
 
-            if (player.getControlledVehicle() instanceof TameableDragonEntity) {
+            if (player.getControlledVehicle() instanceof TameableDragonEntity dragon) {
+                while (BREATH_KEY.consumeClick()) {
+                    PacketDistributor.sendToServer(new DragonBreathPacket(dragon.getId()));
+                }
+
                 if (Minecraft.getInstance().options.keyShift.consumeClick()) {
                     wasShiftDown = true;
 

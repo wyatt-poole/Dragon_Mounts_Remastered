@@ -90,7 +90,9 @@ abstract class DragonAttributeComponent extends DragonSpawnComponent {
 
         setBaseValue(MAX_HEALTH, ServerConfig.BASE_HEALTH);
         setBaseValue(ATTACK_DAMAGE, ServerConfig.BASE_DAMAGE);
-        setBaseValue(MOVEMENT_SPEED, DragonConstants.BASE_SPEED_GROUND * ServerConfig.BASE_WALKING_SPEED * ServerConfig.BASE_SPEED);
+        setBaseValue(
+                MOVEMENT_SPEED,
+                DragonConstants.BASE_SPEED_GROUND * ServerConfig.BASE_WALKING_SPEED * ServerConfig.BASE_SPEED);
         setBaseValue(FLYING_SPEED, DragonConstants.BASE_SPEED_FLYING * ServerConfig.BASE_FLYING_SPEED);
         setBaseValue(SWIM_SPEED, DragonConstants.BASE_SPEED_WATER * ServerConfig.BASE_SWIMMING_SPEED);
 
@@ -222,9 +224,19 @@ abstract class DragonAttributeComponent extends DragonSpawnComponent {
     public void readAdditionalSaveData(CompoundTag compound) {
         super.readAdditionalSaveData(compound);
 
-        entityData.set(healthAttribute, compound.getFloat("healthAttribute"));
-        entityData.set(speedAttribute, compound.getFloat("speedAttribute"));
-        entityData.set(damageAttribute, compound.getFloat("damageAttribute"));
-        entityData.set(maxScaleAttribute, compound.getFloat("maxScaleAttribute"));
+        // Guard against old saves / pre-serialized NBTs that were stored before persistence was added.
+        // Without the contains() checks, getFloat returns 0 and the dragon ends up with minimum stats.
+        if (compound.contains("healthAttribute")) {
+            entityData.set(healthAttribute, compound.getFloat("healthAttribute"));
+        }
+        if (compound.contains("speedAttribute")) {
+            entityData.set(speedAttribute, compound.getFloat("speedAttribute"));
+        }
+        if (compound.contains("damageAttribute")) {
+            entityData.set(damageAttribute, compound.getFloat("damageAttribute"));
+        }
+        if (compound.contains("maxScaleAttribute")) {
+            entityData.set(maxScaleAttribute, compound.getFloat("maxScaleAttribute"));
+        }
     }
 }
