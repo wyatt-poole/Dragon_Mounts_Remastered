@@ -7,6 +7,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -34,7 +35,7 @@ public abstract class CameraDragonHeightMixin {
     public abstract Vec3 getPosition();
 
     @Shadow
-    protected abstract void move(double zoomBackward, double zoomUp, double zoomLeft);
+    public abstract Vector3f getLookVector();
 
     @Inject(method = "setup", at = @At("TAIL"))
     private void dmr$liftFirstPersonWhileRidingDragon(
@@ -47,19 +48,24 @@ public abstract class CameraDragonHeightMixin {
         int forward = ClientConfig.FIRST_PERSON_CAMERA_FORWARD;
         if (height == 0 && forward == 0) return;
 
+        Vec3 pos = getPosition();
+
         // Vertical lift in WORLD space (so a pitched-up gaze still moves the camera
         // straight up rather than along the look vector).
         if (height != 0) {
-            Vec3 pos = getPosition();
-            setPosition(new Vec3(pos.x, pos.y + height, pos.z));
+            pos = pos.add(0, height, 0);
         }
 
-        // Forward / backward along the camera's local +X (look direction). Positive
-        // pushes the camera toward what you're looking at; negative pulls it back.
-        // Camera.move(forward, up, left) -- per vanilla. We pass the value as-is for
-        // intuitive "+ = forward".
+        // Forward / backward along the camera's look direction. We compute this manually
+        // via getLookVector + setPosition rather than calling Camera.move, because the
+        // private Camera.move method's mapping varies across NeoForge runtimes and an
+        // @Shadow on it has been seen to fail in production. getLookVector / setPosition
+        // / getPosition are public/protected and stable.
         if (forward != 0) {
-            move(forward, 0, 0);
+            Vector3f look = getLookVector();
+            pos = pos.add(look.x() * forward, look.y() * forward, look.z() * forward);
         }
+
+        setPosition(pos);
     }
 }
