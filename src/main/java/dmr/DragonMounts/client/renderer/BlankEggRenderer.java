@@ -32,7 +32,10 @@ public class BlankEggRenderer implements BlockEntityRenderer<DMRBlankEggBlockEnt
             int i1) {
         var model = Minecraft.getInstance().getBlockRenderer().getBlockModel(blockEntity.getBlockState());
 
-        if (model instanceof Baked eggModel) {
+        // Unwrap CTM-wrapped models (e.g. Continuity) so the blank-egg morph still draws.
+        // See https://github.com/Wyrmheart-Team/Dragon_Mounts_Remastered/issues/112
+        Baked eggModel = Baked.unwrap(model);
+        if (eggModel != null) {
             var bakedModel = eggModel.models.getOrDefault("blank", Baked.FALLBACK.get());
 
             poseStack.pushPose();

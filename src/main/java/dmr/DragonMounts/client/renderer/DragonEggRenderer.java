@@ -35,7 +35,12 @@ public class DragonEggRenderer implements BlockEntityRenderer<DMREggBlockEntity>
 
         var model = Minecraft.getInstance().getBlockRenderer().getBlockModel(blockEntity.getBlockState());
 
-        if (model instanceof DragonEggModel.Baked eggModel) {
+        // Unwrap potential CTM/connected-texture wrappers (e.g. Continuity) that would otherwise
+        // fail the `instanceof Baked` check and leave the egg invisible during hatching, since the
+        // block reports RenderShape.INVISIBLE while hatching and relies entirely on this renderer.
+        // See https://github.com/Wyrmheart-Team/Dragon_Mounts_Remastered/issues/112
+        DragonEggModel.Baked eggModel = DragonEggModel.Baked.unwrap(model);
+        if (eggModel != null) {
             var bakedModel = eggModel.models.getOrDefault(blockEntity.getBreedId(), Baked.FALLBACK.get());
 
             poseStack.pushPose();

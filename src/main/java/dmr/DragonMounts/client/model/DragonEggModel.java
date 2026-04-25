@@ -76,12 +76,28 @@ public class DragonEggModel implements IUnbakedGeometry<DragonEggModel> {
         public static final Supplier<BakedModel> FALLBACK = Suppliers.memoize(
                 () -> Minecraft.getInstance().getBlockRenderer().getBlockModel(Blocks.DRAGON_EGG.defaultBlockState()));
 
+        // The most-recently-baked instance, captured on construction.
+        // Used as a fallback by the egg block-entity renderers when the lookup
+        // via Minecraft.getBlockRenderer().getBlockModel(state) returns a wrapper
+        // (e.g. Continuity's connected-textures wrapper) that fails our
+        // `instanceof Baked` cast and would otherwise leave the egg invisible
+        // while hatching (since DMREggBlock.getRenderShape() == INVISIBLE).
+        // See https://github.com/Wyrmheart-Team/Dragon_Mounts_Remastered/issues/112
+        public static volatile Baked LATEST = null;
+
+        /** Unwrap any wrapping baked model and return the underlying egg model, or null if none has been baked yet. */
+        public static Baked unwrap(BakedModel model) {
+            if (model instanceof Baked b) return b;
+            return LATEST;
+        }
+
         public final ImmutableMap<String, BakedModel> models;
         private final ItemOverrides overrides;
 
         public Baked(ImmutableMap<String, BakedModel> models, ItemOverrides overrides) {
             this.models = models;
             this.overrides = new ItemModelResolver(this, overrides);
+            LATEST = this;
         }
 
         @Override
