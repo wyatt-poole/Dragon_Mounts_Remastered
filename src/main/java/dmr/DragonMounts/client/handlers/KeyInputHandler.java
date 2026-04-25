@@ -11,7 +11,6 @@ import dmr.DragonMounts.network.packets.DragonBreathPacket;
 import dmr.DragonMounts.network.packets.SummonDragonPacket;
 import dmr.DragonMounts.server.entity.TameableDragonEntity;
 import dmr.DragonMounts.util.PlayerStateUtils;
-import java.util.concurrent.TimeUnit;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
@@ -117,8 +116,22 @@ public class KeyInputHandler {
     @EventBusSubscriber(modid = DMR.MOD_ID, value = Dist.CLIENT, bus = Bus.GAME)
     public static class KeyClickHandler {
 
-        private static Long lastUnshift = null;
-        private static boolean wasShiftDown = false;
+        // Tap-vs-hold detection state for the double-tap-shift-to-dismount feature.
+        //
+        // Previously this used `lastUnshift` (release-time of any shift hold) plus a
+        // 2-second window to detect "double tap". That mis-classified normal descend
+        // releases as taps, so any later shift press within 2s of *any* descend
+        // release would dismount. With long enough chains it could appear to dismount
+        // on a single press from minutes earlier.
+        //
+        // New logic: track the start of each press. On release, only count the press
+        // as a "tap" if it was held for less than TAP_MAX_DURATION_MS. Two
+        // consecutive taps within DOUBLE_TAP_WINDOW_MS dismount. Holds are descends
+        // and never count.
+        private static Long pressStartedAt = null;
+        private static Long lastTapEndedAt = null;
+        private static final long TAP_MAX_DURATION_MS = 250L;
+        private static final long DOUBLE_TAP_WINDOW_MS = 500L;
 
         @OnlyIn(Dist.CLIENT)
         @SubscribeEvent
@@ -140,26 +153,37 @@ public class KeyInputHandler {
                     PacketDistributor.sendToServer(new DragonBreathPacket(dragon.getId()));
                 }
 
-                if (Minecraft.getInstance().options.keyShift.consumeClick()) {
-                    wasShiftDown = true;
+                var shift = Minecraft.getInstance().options.keyShift;
+                long now = System.currentTimeMillis();
+                boolean shiftPressed = shift.consumeClick();
+                boolean shiftDown = shift.isDown();
+
+                if (shiftPressed) {
+                    pressStartedAt = now;
 
                     if (ClientConfig.DOUBLE_PRESS_DISMOUNT) {
-                        if (lastUnshift != null
-                                && System.currentTimeMillis() > lastUnshift
-                                && System.currentTimeMillis()
-                                        < lastUnshift + TimeUnit.MILLISECONDS.convert(2, TimeUnit.SECONDS)) {
+                        // Did the previous tap end recently enough? Then this press completes a double-tap.
+                        if (lastTapEndedAt != null && (now - lastTapEndedAt) <= DOUBLE_TAP_WINDOW_MS) {
                             PacketDistributor.sendToServer(new DismountDragonPacket(player.getId(), true));
-                            lastUnshift = null;
-                            wasShiftDown = false;
+                            lastTapEndedAt = null;
+                            pressStartedAt = null;
+                            return;
                         }
                     } else {
                         PacketDistributor.sendToServer(new DismountDragonPacket(player.getId(), true));
+                        return;
                     }
-                    return;
-                } else if (wasShiftDown
-                        && !Minecraft.getInstance().options.keyShift.isDown()) {
-                    lastUnshift = System.currentTimeMillis();
-                    wasShiftDown = false;
+                }
+
+                // On release, classify the just-completed press as a tap or a hold.
+                if (pressStartedAt != null && !shiftDown) {
+                    long heldFor = now - pressStartedAt;
+                    if (heldFor <= TAP_MAX_DURATION_MS) {
+                        lastTapEndedAt = now;
+                    }
+                    // Holds (descends) deliberately don't update lastTapEndedAt, so a
+                    // descend can't be retroactively chained into a double-tap.
+                    pressStartedAt = null;
                 }
 
                 if (DISMOUNT_KEY.consumeClick()) {

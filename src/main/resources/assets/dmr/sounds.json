@@ -87,5 +87,28 @@
       }
     ],
     "subtitle": "subtitles.entity.dragon.ambient.ghost"
+  },
+  "entity.dragon.breath": {
+    "sounds": [
+      {
+        "name": "minecraft:entity.ender_dragon.shoot",
+        "type": "event",
+        "volume": 0.6,
+        "pitch": 0.85
+      },
+      {
+        "name": "minecraft:entity.blaze.shoot",
+        "type": "event",
+        "volume": 0.7,
+        "pitch": 0.7
+      },
+      {
+        "name": "minecraft:item.firecharge.use",
+        "type": "event",
+        "volume": 0.8,
+        "pitch": 0.6
+      }
+    ],
+    "subtitle": "subtitles.entity.dragon.breath"
   }
 }

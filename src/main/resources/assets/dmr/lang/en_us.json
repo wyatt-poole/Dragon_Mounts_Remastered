@@ -261,5 +261,6 @@
   "subtitles.entity.dragon.ambient.ghost": "Ethereal dragon noises",
   "subtitles.entity.dragon.death": "Dragon dies",
   "subtitles.entity.dragon.step": "Dragon footsteps",
-  "subtitles.entity.dragon.whistle": "Dragon whistle blows"
+  "subtitles.entity.dragon.whistle": "Dragon whistle blows",
+  "subtitles.entity.dragon.breath": "Dragon breathes fire"
 }

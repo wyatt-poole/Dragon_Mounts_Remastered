@@ -2,6 +2,7 @@ package dmr.DragonMounts.server.entity.dragon;
 
 import dmr.DragonMounts.client.particle.particleoptions.DragonBreathParticleOptions;
 import dmr.DragonMounts.network.packets.DragonBreathTargetSyncPacket;
+import dmr.DragonMounts.registry.ModSounds;
 import dmr.DragonMounts.types.breath.DragonBreathType;
 import lombok.Getter;
 import lombok.Setter;
@@ -146,6 +147,19 @@ abstract class DragonBreathComponent extends DragonAnimationComponent {
                 if (breathTime == -1) {
                     breathTime = (int) (20 * breathLength);
                     this.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, getBreathTarget());
+                    // Play breath SFX once at the start of the attack. Server-side
+                    // playSound replicates to all tracking clients.
+                    if (!level.isClientSide) {
+                        level.playSound(
+                                null,
+                                getX(),
+                                getY(),
+                                getZ(),
+                                ModSounds.DRAGON_BREATH_SOUND.get(),
+                                getSoundSource(),
+                                0.9f,
+                                1.0f + (random.nextFloat() - 0.5f) * 0.2f);
+                    }
                 } else if (breathTime == 0) {
                     stopBreathAttack();
                     breathTime = -1;
