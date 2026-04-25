@@ -3,7 +3,6 @@ package dmr.DragonMounts.mixins;
 import dmr.DragonMounts.common.capability.DragonOwnerCapability;
 import dmr.DragonMounts.network.packets.DismountDragonPacket;
 import dmr.DragonMounts.registry.ModCapabilities;
-import dmr.DragonMounts.registry.ModMemoryModuleTypes;
 import dmr.DragonMounts.server.entity.TameableDragonEntity;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -24,7 +23,10 @@ public class EntityDismountMixin {
                 DragonOwnerCapability cap = player.getData(ModCapabilities.PLAYER_CAPABILITY);
                 cap.shouldDismount = false;
                 dragon.updateOwnerData();
-                dragon.getBrain().setMemoryWithExpiry(ModMemoryModuleTypes.SHOULD_SIT.get(), true, 40L);
+                // Restore the sit/wander mode the dragon was in before the player mounted,
+                // instead of unconditionally forcing a sit (the previous SHOULD_SIT memory).
+                // If nothing was saved, this falls back to "follow" (no sit, no wander).
+                dragon.restorePreMountMode();
 
                 if (player.level.isClientSide()) {
                     PacketDistributor.sendToServer(new DismountDragonPacket(player.getId(), false));

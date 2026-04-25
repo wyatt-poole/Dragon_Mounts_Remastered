@@ -55,17 +55,26 @@ public class DragonInventoryScreen extends AbstractContainerScreen<DragonContain
         leftPos = (width - xSize) / 2;
         topPos = (height - ySize) / 2;
 
-        addRenderableWidget(new ModeButton(leftPos + 242 - 18 * 2, topPos + 17, "dmr.inventory.sit", p_214087_1_ -> {
-            PacketDistributor.sendToServer(new DragonStatePacket(dragon.getId(), 0));
-        }));
+        addRenderableWidget(new ModeButton(
+                leftPos + 242 - 18 * 2,
+                topPos + 17,
+                "dmr.inventory.sit",
+                () -> dragon.isOrderedToSit(),
+                p -> PacketDistributor.sendToServer(new DragonStatePacket(dragon.getId(), 0))));
 
-        addRenderableWidget(new ModeButton(leftPos + 242 - 18, topPos + 17, "dmr.inventory.follow", p_214087_1_ -> {
-            PacketDistributor.sendToServer(new DragonStatePacket(dragon.getId(), 1));
-        }));
+        addRenderableWidget(new ModeButton(
+                leftPos + 242 - 18,
+                topPos + 17,
+                "dmr.inventory.follow",
+                () -> !dragon.isOrderedToSit() && dragon.getWanderTarget().isEmpty(),
+                p -> PacketDistributor.sendToServer(new DragonStatePacket(dragon.getId(), 1))));
 
-        addRenderableWidget(new ModeButton(leftPos + 242, topPos + 17, "dmr.inventory.wander", p_214087_1_ -> {
-            PacketDistributor.sendToServer(new DragonStatePacket(dragon.getId(), 2));
-        }));
+        addRenderableWidget(new ModeButton(
+                leftPos + 242,
+                topPos + 17,
+                "dmr.inventory.wander",
+                () -> dragon.getWanderTarget().isPresent(),
+                p -> PacketDistributor.sendToServer(new DragonStatePacket(dragon.getId(), 2))));
 
         for (int i = 0; i < 6; i++) {
             var hasAbility = dragon.getBreed().getAbilities().size() > i;
@@ -190,7 +199,18 @@ public class DragonInventoryScreen extends AbstractContainerScreen<DragonContain
     }
 
     public static class ModeButton extends ExtendedButton {
+        private final java.util.function.BooleanSupplier isModeActive;
+
         public ModeButton(int xPos, int yPos, String text, Button.OnPress handler) {
+            this(xPos, yPos, text, () -> false, handler);
+        }
+
+        public ModeButton(
+                int xPos,
+                int yPos,
+                String text,
+                java.util.function.BooleanSupplier isModeActive,
+                Button.OnPress handler) {
             super(
                     xPos,
                     yPos,
@@ -198,7 +218,26 @@ public class DragonInventoryScreen extends AbstractContainerScreen<DragonContain
                     18,
                     Component.literal(Component.translatable(text).getString(1)),
                     handler);
+            this.isModeActive = isModeActive;
             this.setTooltip(Tooltip.create(Component.translatable(text)));
+        }
+
+        @Override
+        public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            super.renderWidget(graphics, mouseX, mouseY, partialTick);
+            if (isModeActive != null && isModeActive.getAsBoolean()) {
+                // Gold 1-pixel border around the button to indicate this is the dragon's
+                // currently-active mode.
+                int color = 0xFFFFD23F;
+                int x0 = getX() - 1;
+                int y0 = getY() - 1;
+                int x1 = getX() + width + 1;
+                int y1 = getY() + height + 1;
+                graphics.fill(x0, y0, x1, y0 + 1, color); // top
+                graphics.fill(x0, y1 - 1, x1, y1, color); // bottom
+                graphics.fill(x0, y0, x0 + 1, y1, color); // left
+                graphics.fill(x1 - 1, y0, x1, y1, color); // right
+            }
         }
     }
 
@@ -219,6 +258,22 @@ public class DragonInventoryScreen extends AbstractContainerScreen<DragonContain
                     leftPos + 101 + 162,
                     topPos + 52 + 54,
                     FastColor.ARGB32.color(200, 0x5B5B5B));
+        }
+
+        // Empty-slot hint icon for the chest slot. The slot itself only renders an
+        // ItemStack when one is present, so an unequipped slot is just a blank square
+        // -- nothing tells a new player it accepts a chest. Render a faded chest icon
+        // overlay when the chest slot is empty so it reads as "drop a chest here".
+        // The chest slot is at leftPos+138, topPos+18 (DragonContainerMenu line 67).
+        if (dragon.getInventory().getItem(DragonInventory.CHEST_SLOT).isEmpty()) {
+            com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+            com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1f, 1f, 1f, 0.45f);
+            graphics.renderFakeItem(
+                    new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.CHEST),
+                    leftPos + 138,
+                    topPos + 18);
+            com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+            com.mojang.blaze3d.systems.RenderSystem.disableBlend();
         }
 
         if (ServerConfig.ENABLE_RANDOM_STATS) {

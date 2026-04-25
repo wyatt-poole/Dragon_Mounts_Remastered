@@ -42,8 +42,42 @@ import org.jetbrains.annotations.Nullable;
 @Getter
 public class TameableDragonEntity extends AbstractDragonEntity {
 
+    // Pre-mount mode snapshot. When the player mounts, mobInteract clears the current
+    // sit / wander state so the dragon can stand to be ridden. We snapshot what those
+    // values WERE here, and restore them on dismount via restorePreMountMode() so the
+    // dragon's last commanded mode persists across rides instead of being silently
+    // reset to "follow".
+    private boolean preMountSit = false;
+    private Optional<net.minecraft.core.GlobalPos> preMountWander = Optional.empty();
+    private boolean hasPreMountState = false;
+
     public TameableDragonEntity(EntityType<? extends TamableAnimal> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
+    }
+
+    /** Snapshot the dragon's current sit/wander state so it can be restored after the rider dismounts. */
+    public void savePreMountMode() {
+        if (hasPreMountState) return; // don't overwrite if already saved (re-mounting without dismount)
+        this.preMountSit = isOrderedToSit();
+        this.preMountWander = getWanderTarget();
+        this.hasPreMountState = true;
+    }
+
+    /**
+     * Restore the saved sit/wander state captured at mount time. If nothing was saved,
+     * the dragon falls into the default "follow" mode (no sit, no wander).
+     */
+    public void restorePreMountMode() {
+        if (!hasPreMountState) {
+            // No snapshot -> default to follow.
+            setOrderedToSit(false);
+            setWanderTarget(Optional.empty());
+            return;
+        }
+        setOrderedToSit(preMountSit);
+        setWanderTarget(preMountWander);
+        hasPreMountState = false;
+        preMountWander = Optional.empty();
     }
 
     @Override
@@ -165,6 +199,9 @@ public class TameableDragonEntity extends AbstractDragonEntity {
                 setRidingPlayer(player);
                 navigation.stop();
             }
+            // Snapshot the current sit/wander mode BEFORE we clear them so the dismount
+            // handler can put the dragon back where it was.
+            savePreMountMode();
             setTarget(null);
             setWanderTarget(Optional.empty());
             stopSitting();
