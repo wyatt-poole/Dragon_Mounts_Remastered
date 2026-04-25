@@ -133,6 +133,11 @@ public class KeyInputHandler {
         private static final long TAP_MAX_DURATION_MS = 250L;
         private static final long DOUBLE_TAP_WINDOW_MS = 500L;
 
+        // Track the player's previously-controlled vehicle so we can detect "just mounted
+        // a dragon" and replace vanilla's "Press X to dismount" actionbar tip with one
+        // that reflects DMR's actual dismount behavior (single-press vs. double-tap).
+        private static int lastVehicleId = -1;
+
         @OnlyIn(Dist.CLIENT)
         @SubscribeEvent
         public static void clientTick(ClientTickEvent.Pre event) {
@@ -149,6 +154,19 @@ public class KeyInputHandler {
             var player = Minecraft.getInstance().player;
 
             if (player.getControlledVehicle() instanceof TameableDragonEntity dragon) {
+                // Replace vanilla's "Press X to dismount" tip with one that reflects the
+                // actual dismount key behavior (single press vs. double tap). Fires once
+                // per mount transition.
+                if (dragon.getId() != lastVehicleId) {
+                    lastVehicleId = dragon.getId();
+                    var keyName = Minecraft.getInstance().options.keyShift.getTranslatedKeyMessage();
+                    var tipKey = ClientConfig.DOUBLE_PRESS_DISMOUNT
+                            ? "dmr.mount.tip.double_tap"
+                            : "dmr.mount.tip.single_press";
+                    player.displayClientMessage(
+                            net.minecraft.network.chat.Component.translatable(tipKey, keyName), true);
+                }
+
                 while (BREATH_KEY.consumeClick()) {
                     PacketDistributor.sendToServer(new DragonBreathPacket(dragon.getId()));
                 }
@@ -191,6 +209,11 @@ public class KeyInputHandler {
                     return;
                 }
             } else {
+                // Clear mount-tracking state so the dismount tip fires again on the next mount.
+                if (lastVehicleId != -1) {
+                    lastVehicleId = -1;
+                }
+
                 if (SUMMON_DRAGON.consumeClick()) {
                     PacketDistributor.sendToServer(new SummonDragonPacket());
                     return;

@@ -23,4 +23,7 @@ public class ModSounds {
             "entity.dragon.ambient", () -> SoundEvent.createVariableRangeEvent(DMR.id("entity.dragon.ambient")));
     public static final Supplier<SoundEvent> DRAGON_BREATH_SOUND = SOUNDS.register(
             "entity.dragon.breath", () -> SoundEvent.createVariableRangeEvent(DMR.id("entity.dragon.breath")));
+    public static final Supplier<SoundEvent> DRAGON_BREATH_LOOP_SOUND = SOUNDS.register(
+            "entity.dragon.breath_loop",
+            () -> SoundEvent.createVariableRangeEvent(DMR.id("entity.dragon.breath_loop")));
 }

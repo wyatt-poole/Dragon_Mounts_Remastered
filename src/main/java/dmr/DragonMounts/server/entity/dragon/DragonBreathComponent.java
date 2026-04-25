@@ -168,6 +168,25 @@ abstract class DragonBreathComponent extends DragonAnimationComponent {
                     this.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, getBreathTarget());
                     this.getDragon().triggerAnim("head-controller", "breath");
 
+                    // Continuous breath roar: spawn the looping fire sound roughly every
+                    // half-second of breath so it sounds like a sustained "pfffffft"
+                    // instead of the stuttered "pfft...pfft...pfft" you'd get from a
+                    // single shot at start. Each spawn is ~1.5s long; overlapping them
+                    // every ~10 ticks (0.5s) gives smooth coverage for the 50-tick
+                    // (2.5s) breath window. Pitch jitters per shot so they don't
+                    // sound like an obvious loop.
+                    if (!level.isClientSide && breathTime % 10 == 0) {
+                        level.playSound(
+                                null,
+                                getX(),
+                                getY(),
+                                getZ(),
+                                ModSounds.DRAGON_BREATH_LOOP_SOUND.get(),
+                                getSoundSource(),
+                                0.85f,
+                                0.85f + random.nextFloat() * 0.3f);
+                    }
+
                     if (getBreathTarget() instanceof EntityTracker entityTracker) {
                         Entity targetEntity = entityTracker.getEntity();
 

@@ -10,5 +10,7 @@
     "PlayerDismountMixin",
     "ReplenishDragonEggMixin"
   ],
-  "client": []
+  "client": [
+    "client.CameraDragonHeightMixin"
+  ]
 }

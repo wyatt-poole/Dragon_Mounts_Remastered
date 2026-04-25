@@ -93,20 +93,31 @@
       {
         "name": "minecraft:entity.ender_dragon.shoot",
         "type": "event",
-        "volume": 0.6,
+        "volume": 0.7,
         "pitch": 0.85
       },
       {
         "name": "minecraft:entity.blaze.shoot",
         "type": "event",
-        "volume": 0.7,
-        "pitch": 0.7
+        "volume": 0.8,
+        "pitch": 0.65
+      }
+    ],
+    "subtitle": "subtitles.entity.dragon.breath"
+  },
+  "entity.dragon.breath_loop": {
+    "sounds": [
+      {
+        "name": "minecraft:block.fire.ambient",
+        "type": "event",
+        "volume": 1.6,
+        "pitch": 0.55
       },
       {
-        "name": "minecraft:item.firecharge.use",
+        "name": "minecraft:entity.blaze.burn",
         "type": "event",
-        "volume": 0.8,
-        "pitch": 0.6
+        "volume": 0.9,
+        "pitch": 0.7
       }
     ],
     "subtitle": "subtitles.entity.dragon.breath"

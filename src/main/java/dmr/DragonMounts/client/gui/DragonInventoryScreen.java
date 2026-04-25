@@ -244,6 +244,8 @@ public class DragonInventoryScreen extends AbstractContainerScreen<DragonContain
     private static final ResourceLocation TITLE_BOX_SPRITE =
             ResourceLocation.withDefaultNamespace("advancements/title_box");
 
+    private static final ResourceLocation EMPTY_CHEST_SLOT_SPRITE = DMR.id("item/empty_slot_chest");
+
     public void render(GuiGraphics graphics, int pMouseX, int pMouseY, float pPartialTick) {
         this.renderBackground(graphics, pMouseX, pMouseY, pPartialTick);
         this.xMouse = (float) pMouseX;
@@ -260,20 +262,11 @@ public class DragonInventoryScreen extends AbstractContainerScreen<DragonContain
                     FastColor.ARGB32.color(200, 0x5B5B5B));
         }
 
-        // Empty-slot hint icon for the chest slot. The slot itself only renders an
-        // ItemStack when one is present, so an unequipped slot is just a blank square
-        // -- nothing tells a new player it accepts a chest. Render a faded chest icon
-        // overlay when the chest slot is empty so it reads as "drop a chest here".
-        // The chest slot is at leftPos+138, topPos+18 (DragonContainerMenu line 67).
+        // Empty-slot hint icon for the chest slot. Blits an outline sprite (NOT the full
+        // chest texture) so it's clearly a hint, not a placed item. Slot position:
+        // leftPos+138, topPos+18 (see DragonContainerMenu line 67).
         if (dragon.getInventory().getItem(DragonInventory.CHEST_SLOT).isEmpty()) {
-            com.mojang.blaze3d.systems.RenderSystem.enableBlend();
-            com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1f, 1f, 1f, 0.45f);
-            graphics.renderFakeItem(
-                    new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.CHEST),
-                    leftPos + 138,
-                    topPos + 18);
-            com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-            com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+            graphics.blitSprite(EMPTY_CHEST_SLOT_SPRITE, leftPos + 138, topPos + 18, 16, 16);
         }
 
         if (ServerConfig.ENABLE_RANDOM_STATS) {
