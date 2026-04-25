@@ -23,7 +23,12 @@ public class ClientConfig {
     @SyncedConfig
     public static boolean DOUBLE_PRESS_DISMOUNT = true;
 
-    @Config(key = "alternate_attack_key", comment = "Should dragon attacks require holding down the dragon attack key?")
+    @Config(
+            key = "alternate_attack_key",
+            comment =
+                    "Require a modifier key to send dragon actions to the server.\n"
+                            + "  false (default) -> while mounted, left-click ALWAYS bites and right-click ALWAYS breathes; vanilla block break / place / item use are suppressed.\n"
+                            + "  true            -> mount actions only fire while you hold the 'Dragon Action Modifier' keybind (Options -> Controls). When you are not holding it, left/right-click pass through to vanilla (break/place/use) as normal.")
     public static boolean USE_ALTERNATE_ATTACK_KEY = false;
 
     @Config(
