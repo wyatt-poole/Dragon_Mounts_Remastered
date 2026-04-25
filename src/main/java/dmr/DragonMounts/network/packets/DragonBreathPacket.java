@@ -20,26 +20,48 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * Packet for triggering a dragon breath attack.
  */
 public class DragonBreathPacket extends AbstractMessage<DragonBreathPacket> {
-    private static final StreamCodec<FriendlyByteBuf, DragonBreathPacket> STREAM_CODEC =
-            StreamCodec.composite(ByteBufCodecs.INT, DragonBreathPacket::getEntityId, DragonBreathPacket::new);
+    private static final StreamCodec<FriendlyByteBuf, DragonBreathPacket> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.INT,
+            DragonBreathPacket::getEntityId,
+            ByteBufCodecs.FLOAT,
+            DragonBreathPacket::getAimHeightOffset,
+            ByteBufCodecs.FLOAT,
+            DragonBreathPacket::getAimForwardOffset,
+            DragonBreathPacket::new);
 
     @Getter
     private final int entityId;
+
+    // Camera offsets reported by the client. The breath ray-cast in handle() uses
+    // these to start from the same logical "look-from" position as the player's
+    // crosshair, so an adjusted first-person camera doesn't desync the crosshair
+    // from the breath. Server has no access to the client's CameraDragonHeightMixin
+    // config, so the values come over the wire.
+    @Getter
+    private final float aimHeightOffset;
+
+    @Getter
+    private final float aimForwardOffset;
 
     /**
      * Empty constructor for NetworkHandler.
      */
     DragonBreathPacket() {
-        this.entityId = -1;
+        this(-1, 0f, 0f);
     }
 
     /**
-     * Creates a new packet with the given entity ID.
-     *
-     * @param entityId The ID of the entity
+     * Backwards-compatible single-arg constructor used by callers that don't have a
+     * camera offset to apply.
      */
     public DragonBreathPacket(int entityId) {
+        this(entityId, 0f, 0f);
+    }
+
+    public DragonBreathPacket(int entityId, float aimHeightOffset, float aimForwardOffset) {
         this.entityId = entityId;
+        this.aimHeightOffset = aimHeightOffset;
+        this.aimForwardOffset = aimForwardOffset;
     }
 
     @Override
@@ -58,8 +80,10 @@ public class DragonBreathPacket extends AbstractMessage<DragonBreathPacket> {
         var entity = player.level.getEntity(entityId);
 
         if (entity instanceof TameableDragonEntity dragon) {
-            Vec3 eyePos = player.getEyePosition();
             Vec3 lookVector = player.getLookAngle();
+            // Apply the client's first-person camera offsets to the ray origin so the
+            // crosshair stays accurate. Height is world-Y; forward is along look.
+            Vec3 eyePos = player.getEyePosition().add(0, aimHeightOffset, 0).add(lookVector.scale(aimForwardOffset));
             Vec3 targetPos = eyePos.add(lookVector.scale(10));
 
             // Create a larger bounding box in the direction the player is looking

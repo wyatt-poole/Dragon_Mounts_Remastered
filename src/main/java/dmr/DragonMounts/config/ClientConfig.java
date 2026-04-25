@@ -48,6 +48,17 @@ public class ClientConfig {
     @RangeConstraint(min = -2, max = 5)
     public static int FIRST_PERSON_CAMERA_HEIGHT = 0;
 
+    @Config(
+            key = "first_person_camera_forward",
+            comment = "Forward / backward camera offset (in blocks) when riding a dragon in FIRST person, along\n"
+                    + "your look direction. Positive moves the camera forward (toward what you're looking at);\n"
+                    + "negative moves it backward (behind the rider). Pair with first_person_camera_height to dial\n"
+                    + "in a comfortable view past the dragon.\n"
+                    + "  Default: 0\n"
+                    + "  Range: -3 to 5")
+    @RangeConstraint(min = -3, max = 5)
+    public static int FIRST_PERSON_CAMERA_FORWARD = 0;
+
     @Config(key = "render_hatching_egg", comment = "Should the dragon egg render the hatching animation?")
     public static boolean RENDER_HATCHING_EGG = true;
 

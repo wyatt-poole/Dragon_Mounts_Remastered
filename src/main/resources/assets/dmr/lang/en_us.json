@@ -198,6 +198,8 @@
   "dmr.config.client.riding_camera_offset.tooltip": "Third-person (F5) camera distance while riding a dragon. Higher values zoom the camera out further. Has no effect in first-person view.",
   "dmr.config.client.first_person_camera_height": "First-Person Camera Height",
   "dmr.config.client.first_person_camera_height.tooltip": "Vertical camera offset (in blocks) while riding a dragon in first-person view. Raise this if the dragon's head/neck blocks your forward view. Negative values lower the camera. Has no effect in third-person.",
+  "dmr.config.client.first_person_camera_forward": "First-Person Camera Forward",
+  "dmr.config.client.first_person_camera_forward.tooltip": "Forward / backward camera offset (in blocks) while riding a dragon in first-person view, along your look direction. Positive moves forward (away from the rider, toward what you're looking at). Negative pulls back. Has no effect in third-person.",
   "dmr.config.server.allow_egg_override": "Allow Egg Override",
   "dmr.config.server.allow_egg_override.tooltip": "Allow the vanilla ender egg to be interacted with? (Hatchable)\nUseful to help with mod compatibility",
   "dmr.config.server.allow_hybridization": "Allow Hybridization",

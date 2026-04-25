@@ -168,7 +168,9 @@ public class KeyInputHandler {
                 }
 
                 while (BREATH_KEY.consumeClick()) {
-                    PacketDistributor.sendToServer(new DragonBreathPacket(dragon.getId()));
+                    PacketDistributor.sendToServer(new DragonBreathPacket(
+                            dragon.getId(), (float) ClientConfig.FIRST_PERSON_CAMERA_HEIGHT, (float)
+                                    ClientConfig.FIRST_PERSON_CAMERA_FORWARD));
                 }
 
                 var shift = Minecraft.getInstance().options.keyShift;

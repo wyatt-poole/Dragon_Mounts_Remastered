@@ -33,6 +33,9 @@ public abstract class CameraDragonHeightMixin {
     @Shadow
     public abstract Vec3 getPosition();
 
+    @Shadow
+    protected abstract void move(double zoomBackward, double zoomUp, double zoomLeft);
+
     @Inject(method = "setup", at = @At("TAIL"))
     private void dmr$liftFirstPersonWhileRidingDragon(
             BlockGetter level, Entity entity, boolean detached, boolean reversed, float partialTick, CallbackInfo ci) {
@@ -40,10 +43,23 @@ public abstract class CameraDragonHeightMixin {
         if (!(entity instanceof LocalPlayer player)) return;
         if (!(player.getControlledVehicle() instanceof TameableDragonEntity)) return;
 
-        int offset = ClientConfig.FIRST_PERSON_CAMERA_HEIGHT;
-        if (offset == 0) return;
+        int height = ClientConfig.FIRST_PERSON_CAMERA_HEIGHT;
+        int forward = ClientConfig.FIRST_PERSON_CAMERA_FORWARD;
+        if (height == 0 && forward == 0) return;
 
-        Vec3 pos = getPosition();
-        setPosition(new Vec3(pos.x, pos.y + offset, pos.z));
+        // Vertical lift in WORLD space (so a pitched-up gaze still moves the camera
+        // straight up rather than along the look vector).
+        if (height != 0) {
+            Vec3 pos = getPosition();
+            setPosition(new Vec3(pos.x, pos.y + height, pos.z));
+        }
+
+        // Forward / backward along the camera's local +X (look direction). Positive
+        // pushes the camera toward what you're looking at; negative pulls it back.
+        // Camera.move(forward, up, left) -- per vanilla. We pass the value as-is for
+        // intuitive "+ = forward".
+        if (forward != 0) {
+            move(forward, 0, 0);
+        }
     }
 }

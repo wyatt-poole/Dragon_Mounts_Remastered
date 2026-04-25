@@ -38,7 +38,9 @@ public class DragonAttackEvent {
                     event.setCanceled(true);
                     event.setSwingHand(false);
                     if (didAttack) {
-                        PacketDistributor.sendToServer(new DragonBreathPacket(dragon.getId()));
+                        PacketDistributor.sendToServer(new DragonBreathPacket(
+                                dragon.getId(), (float) ClientConfig.FIRST_PERSON_CAMERA_HEIGHT, (float)
+                                        ClientConfig.FIRST_PERSON_CAMERA_FORWARD));
                     }
                 }
 
