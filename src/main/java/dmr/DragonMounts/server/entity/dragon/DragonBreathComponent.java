@@ -76,8 +76,14 @@ abstract class DragonBreathComponent extends DragonAnimationComponent {
 
                 var breathOptions = new DragonBreathParticleOptions(breathType);
 
+                // force=true bypasses the client-side particle decimation that
+                // would otherwise drop ~95% of these particles on the "Minimal"
+                // setting (and ~50% on "Decreased"), making fire-breath nearly
+                // invisible. Breath is a gameplay signal, not ambient eye candy,
+                // so it should always render regardless of particle setting.
                 level().addParticle(
                                 breathOptions,
+                                true,
                                 getX() + breathSource.x,
                                 getY() + breathSource.y,
                                 getZ() + breathSource.z,
