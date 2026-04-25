@@ -206,9 +206,32 @@ public class TameableDragonEntity extends AbstractDragonEntity {
 
     @Override
     public @Nullable Entity changeDimension(DimensionTransition transition) {
+        // Snapshot per-dragon random-stat rolls and breed/variant before the super call.
+        // super.changeDimension creates a new entity in the target level via
+        // EntityType.create(level), which runs DragonAttributeComponent's constructor and
+        // re-rolls these synched fields with Math.random(). The subsequent NBT round-trip
+        // through saveWithoutId+load is supposed to restore them, but in practice some
+        // dimension-transfer setups (especially when the dragon stays behind, the chunk
+        // unloads, the player returns, and the dragon is reloaded from chunk save) end up
+        // with the post-constructor random sticking. We explicitly copy the values across
+        // here so the stats are guaranteed to persist.
+        // See https://github.com/Wyrmheart-Team/Dragon_Mounts_Remastered/issues/118 (egg
+        // mined with silk touch + cross-dimension hatching → stats reset on every re-entry).
+        float savedHealthAttr = entityData.get(healthAttribute);
+        float savedSpeedAttr = entityData.get(speedAttribute);
+        float savedDamageAttr = entityData.get(damageAttribute);
+        float savedScaleAttr = entityData.get(maxScaleAttribute);
+
         var entity = super.changeDimension(transition);
 
         if (entity instanceof TameableDragonEntity dragon) {
+            // Force the saved synched values onto the new entity, regardless of what the
+            // NBT round-trip did or didn't preserve.
+            dragon.getEntityData().set(healthAttribute, savedHealthAttr);
+            dragon.getEntityData().set(speedAttribute, savedSpeedAttr);
+            dragon.getEntityData().set(damageAttribute, savedDamageAttr);
+            dragon.getEntityData().set(maxScaleAttribute, savedScaleAttr);
+
             var owner = getOwner();
 
             DMR.LOGGER.debug(

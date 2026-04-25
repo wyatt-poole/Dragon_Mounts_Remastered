@@ -14,9 +14,11 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.inventory.InventoryMenu;
+import net.neoforged.neoforge.client.ChunkRenderTypeSet;
 import net.neoforged.neoforge.client.RenderTypeHelper;
 import net.neoforged.neoforge.client.model.pipeline.VertexConsumerWrapper;
 
@@ -43,14 +45,10 @@ public class BlankEggRenderer implements BlockEntityRenderer<DMRBlankEggBlockEnt
             blockEntity.renderProgress = Mth.lerp(0.5f, blockEntity.renderProgress, time);
             float renderProg = blockEntity.renderProgress / DMRBlankEggBlockEntity.MAX_RENDER_PROGRESS;
 
-            var renderType = RenderTypeHelper.getEntityRenderType(
-                    model.getRenderTypes(
-                                    blockEntity.getBlockState(),
-                                    blockEntity.getLevel().random,
-                                    blockEntity.getModelData())
-                            .asList()
-                            .getFirst(),
-                    true);
+            // Read render types from the per-breed sub-model (NOT wrapped by Continuity), not the
+            // top-level wrapped model. See DragonEggRenderer / issue #112 for the rationale.
+            var renderType = pickEntityRenderType(
+                    bakedModel, blockEntity.getBlockState(), blockEntity.getLevel().random, blockEntity.getModelData());
 
             Minecraft.getInstance()
                     .getBlockRenderer()
@@ -71,15 +69,11 @@ public class BlankEggRenderer implements BlockEntityRenderer<DMRBlankEggBlockEnt
                 var targetModel = eggModel.models.getOrDefault(blockEntity.getTargetBreedId(), Baked.FALLBACK.get());
 
                 poseStack.pushPose();
-                var secondRenderType = RenderTypeHelper.getEntityRenderType(
-                        targetModel
-                                .getRenderTypes(
-                                        blockEntity.getBlockState(),
-                                        blockEntity.getLevel().random,
-                                        blockEntity.getModelData())
-                                .asList()
-                                .getFirst(),
-                        true);
+                var secondRenderType = pickEntityRenderType(
+                        targetModel,
+                        blockEntity.getBlockState(),
+                        blockEntity.getLevel().random,
+                        blockEntity.getModelData());
 
                 MultiplyAlphaRenderTypeBuffer multiplyAlphaRenderTypeBuffer =
                         new MultiplyAlphaRenderTypeBuffer(multiBufferSource, renderProg);
@@ -103,6 +97,19 @@ public class BlankEggRenderer implements BlockEntityRenderer<DMRBlankEggBlockEnt
 
             poseStack.popPose();
         }
+    }
+
+    private static RenderType pickEntityRenderType(
+            BakedModel bakedModel,
+            net.minecraft.world.level.block.state.BlockState state,
+            net.minecraft.util.RandomSource random,
+            net.neoforged.neoforge.client.model.data.ModelData modelData) {
+        ChunkRenderTypeSet types = bakedModel.getRenderTypes(state, random, modelData);
+        var list = types.asList();
+        if (!list.isEmpty()) {
+            return RenderTypeHelper.getEntityRenderType(list.getFirst(), true);
+        }
+        return Sheets.cutoutBlockSheet();
     }
 
     public static class MultiplyAlphaRenderTypeBuffer implements MultiBufferSource {

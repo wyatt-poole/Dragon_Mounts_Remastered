@@ -11,8 +11,12 @@ import dmr.DragonMounts.types.dragonBreeds.DragonHybridBreed;
 import java.util.Objects;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.resources.model.BakedModel;
+import net.neoforged.neoforge.client.ChunkRenderTypeSet;
 import net.neoforged.neoforge.client.RenderTypeHelper;
 
 public class DragonEggRenderer implements BlockEntityRenderer<DMREggBlockEntity> {
@@ -54,18 +58,17 @@ public class DragonEggRenderer implements BlockEntityRenderer<DMREggBlockEntity>
             poseStack.translate(0.5, 0, 0.5);
             poseStack.rotateAround(Axis.XN.rotationDegrees(angle), 0, 0, 0);
             poseStack.translate(-0.5, 0, -0.5);
-            var renderType = RenderTypeHelper.getEntityRenderType(
-                    model.getRenderTypes(
-                                    blockEntity.getBlockState(),
-                                    blockEntity.getLevel().random,
-                                    blockEntity.getModelData())
-                            .asList()
-                            .getFirst(),
-                    true);
 
             if (blockEntity.getBreed() != null && blockEntity.getBreed() instanceof DragonHybridBreed hybridBreed) {
                 bakedModel = eggModel.models.getOrDefault(hybridBreed.parent1.getId(), Baked.FALLBACK.get());
             }
+
+            // Read render types from the per-breed sub-model (which is NOT wrapped by Continuity),
+            // not the top-level wrapped model. The wrapper can return a render-type set that's empty
+            // or incompatible with getEntityRenderType, which causes the BER to draw nothing -- the
+            // actual symptom of issue #112 even after the instanceof unwrap.
+            var renderType = pickEntityRenderType(
+                    bakedModel, blockEntity.getBlockState(), blockEntity.getLevel().random, blockEntity.getModelData());
 
             Minecraft.getInstance()
                     .getBlockRenderer()
@@ -82,5 +85,20 @@ public class DragonEggRenderer implements BlockEntityRenderer<DMREggBlockEntity>
                             OverlayTexture.NO_OVERLAY);
             poseStack.popPose();
         }
+    }
+
+    private static RenderType pickEntityRenderType(
+            BakedModel bakedModel,
+            net.minecraft.world.level.block.state.BlockState state,
+            net.minecraft.util.RandomSource random,
+            net.neoforged.neoforge.client.model.data.ModelData modelData) {
+        ChunkRenderTypeSet types = bakedModel.getRenderTypes(state, random, modelData);
+        var list = types.asList();
+        if (!list.isEmpty()) {
+            return RenderTypeHelper.getEntityRenderType(list.getFirst(), true);
+        }
+        // Defensive fallback: if the model reports no render types (e.g. a wrapped or stripped
+        // model from a CTM mod), use the standard cutout entity sheet so we still draw something.
+        return Sheets.cutoutBlockSheet();
     }
 }

@@ -188,10 +188,21 @@ abstract class DragonAttributeComponent extends DragonSpawnComponent {
     }
 
     public void setHatchedAttributes(DMREggBlockEntity eggBlockEntity) {
-        entityData.set(healthAttribute, (float) eggBlockEntity.getHealthAttribute());
-        entityData.set(speedAttribute, (float) eggBlockEntity.getSpeedAttribute());
-        entityData.set(damageAttribute, (float) eggBlockEntity.getDamageAttribute());
-        entityData.set(maxScaleAttribute, (float) eggBlockEntity.getMaxScaleAttribute());
+        // Only override the constructor's freshly-rolled random values if the egg block
+        // entity actually has a stored value (i.e. the egg knows its parents' rolls). When
+        // an egg is mined with silk touch and re-placed, getCloneItemStack drops the
+        // attribute components, so the new block entity's attributes default to 0. Without
+        // this guard, hatching such an egg gives the dragon all-minimum stats (the
+        // "lowest stats by default" bug). Treat 0 as "unknown / use the constructor's
+        // random roll".
+        double h = eggBlockEntity.getHealthAttribute();
+        double s = eggBlockEntity.getSpeedAttribute();
+        double d = eggBlockEntity.getDamageAttribute();
+        double sc = eggBlockEntity.getMaxScaleAttribute();
+        if (h > 0) entityData.set(healthAttribute, (float) h);
+        if (s > 0) entityData.set(speedAttribute, (float) s);
+        if (d > 0) entityData.set(damageAttribute, (float) d);
+        if (sc > 0) entityData.set(maxScaleAttribute, (float) sc);
     }
 
     private int upperLower(double value, int lower, int upper) {
